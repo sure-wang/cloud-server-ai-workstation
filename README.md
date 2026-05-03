@@ -6,9 +6,32 @@ Public case repository for building a reusable AI/Agent-assisted development env
 
 This repository is organized as a set of independent, reusable solution modules.
 
+## Start Here
+
+- Repository overview: `docs/overview.md`
+- Current roadmap: `docs/roadmap.md`
+- Screenshot publishing guidance: `docs/screenshot-guidelines.md`
+- First complete solution: `solutions/file-sharing/`
+
+## Current Status
+
+This repository is intentionally starting small.
+
+- First published module: `solutions/file-sharing`
+- Current focus: practical, reproducible, public-safe solution examples
+- Future direction: expand into a broader set of cloud-server AI/Agent environment patterns
+
 ## Solutions
 
 - `solutions/file-sharing` — sync local cloud-server text files to real Feishu/Lark Drive folders and online docs, with message notifications.
+
+## Why This Repository Exists
+
+- Cloud-server AI/Agent workflows are useful, but often too tied to one machine to share cleanly.
+- Rebuilding the same environment on another server is expensive if the setup only lives in ad hoc notes.
+- Public examples are valuable, but only if they are stripped of secrets, local state, and operational identifiers.
+
+This repository is meant to turn real working setups into reusable, public-safe case modules.
 
 ## Design Goals
 
@@ -40,6 +63,13 @@ Use the example configuration files as templates and create your own local copie
 ## License
 
 This repository is released under the [MIT License](./LICENSE).
+
+## Repository Map
+
+```text
+docs/                     repository-level overview and guidelines
+solutions/file-sharing/   first working public solution module
+```
 
 ## Language Notes
 

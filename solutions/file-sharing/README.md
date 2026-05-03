@@ -4,6 +4,14 @@
 
 One-way sync from local cloud-server text files to real Feishu/Lark Drive folders and online docs.
 
+## At a Glance
+
+- Local source: cloud-server directories
+- Remote target: real Feishu/Lark Drive folders + online docx docs
+- Supported files: `.md`, `.txt`
+- Notification model: short IM notices as the authenticated user
+- Safety posture: one-way sync, no automatic remote deletion during normal runs
+
 ## What It Solves
 
 - Keep selected server-side `.md` / `.txt` files available in Feishu/Lark online docs.
@@ -18,6 +26,14 @@ One-way sync from local cloud-server text files to real Feishu/Lark Drive folder
 - One online doc per local file
 - Real Drive folders are auto-created as needed
 - Existing docs are updated in place with overwrite mode
+
+## Typical Workflow
+
+1. Choose a local directory on the server
+2. Run a `--dry-run` preview
+3. Let the script create or reuse the matching remote folder hierarchy
+4. Create or update Feishu/Lark online docs
+5. Receive a short summary notification
 
 ## Non-Goals
 
@@ -43,6 +59,20 @@ node scripts/feishu_sync.js --dry-run
 node scripts/feishu_sync.js
 ```
 
+## Good Fit
+
+- cloud-server notes and operational docs
+- deployment checklists
+- runbooks and troubleshooting records
+- cross-device access to text knowledge stored on a server
+
+## Not a Good Fit
+
+- binary asset libraries
+- large media archives
+- exact file-byte mirroring requirements
+- workflows that require automatic remote deletion on local removal
+
 ## Directory Layout
 
 - `scripts/` — sync and notification scripts
@@ -66,6 +96,12 @@ Examples:
 - Do not commit real `config.json` or `data/state.json`
 - Do not live-sync sensitive system directories before a `--dry-run` review
 - If you share logs, screenshots, or notifications publicly, redact local paths, doc IDs, folder tokens, and other runtime metadata
+
+## Current Limitations
+
+- state is keyed by absolute local path, so local moves/renames are treated as new remote docs
+- remote-only cleanup is a separate manual operation, not part of normal sync
+- only text-oriented files are handled in the current public version
 
 ## Read Next
 
