@@ -1,0 +1,48 @@
+# Cloud Server AI Workstation
+
+[English](./README.md)
+
+这是一个面向“云服务器 AI / Agent 协助开发环境搭建”的公开案例仓库，用来沉淀可复用、可恢复、可分享的工作流方案。
+
+## 方案模块
+
+- `solutions/file-sharing`：将云服务器上的本地文本文件同步到飞书 / Lark 云盘与在线文档，并支持简短消息通知。
+
+## 设计目标
+
+- 每个方案模块都能独立理解、独立复用。
+- 尽量让一台新的云服务器也能快速恢复同样的工作环境。
+- 公开仓库中只保留可分享内容，不提交本机私密配置与状态。
+- 通过文档和 skill 固化上下文，减少未来 AI / Agent 会话重复探索。
+
+## 规划方向
+
+后续这个仓库会继续扩展更多云服务器 AI / Agent 环境模式，例如：
+
+- 反向代理与 Web 访问方案
+- 远程编码与 Agent 入口方案
+- 聊天驱动运维 / 自动化操作
+- 环境初始化与灾难恢复
+
+## 公开安全原则
+
+仓库不会提交以下内容：
+
+- 真实 app secret
+- 真实 access token
+- 真实本地状态文件
+- 机器私有配置
+
+请基于示例配置自行创建本地副本。
+
+## License
+
+本仓库采用 [MIT License](./LICENSE)。
+
+## 语言说明
+
+- 英文仓库入口：`README.md`
+- 中文仓库入口：`README.zh-CN.md`
+- 英文 file-sharing 入口：`solutions/file-sharing/README.md`
+- 中文 file-sharing 入口：`solutions/file-sharing/README.zh-CN.md`
+- 截图发布规范：`docs/screenshot-guidelines.md`

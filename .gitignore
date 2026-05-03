@@ -1,0 +1,9 @@
+solutions/file-sharing/config/config.json
+solutions/file-sharing/config/*.local.json
+solutions/file-sharing/data/**
+!solutions/file-sharing/data/.gitkeep
+.env*
+*.local.*
+*.bak
+*.tmp
+node_modules/

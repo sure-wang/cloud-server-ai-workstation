@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "files": {
+    "/absolute/path/to/local/source/readme.md": {
+      "docId": "DOC_TOKEN_PLACEHOLDER",
+      "title": "readme",
+      "checksum": "SHA256_PLACEHOLDER",
+      "mtimeMs": 1700000000000,
+      "folderToken": "FOLDER_TOKEN_PLACEHOLDER",
+      "lastSyncedAt": "2026-01-01T00:00:00.000Z"
+    }
+  }
+}
