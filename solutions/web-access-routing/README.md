@@ -25,6 +25,7 @@ Public-safe reverse proxy patterns for exposing AI tools and admin panels on a c
 - subdomain-first routing strategy
 - migration notes for path-based legacy entries
 - localhost-only protection for upstream admin ports using a small systemd firewall guard
+- Lucky-oriented notes for DDNS-managed subdomains and internal safe URL behavior
 
 ## Typical Workflow
 
@@ -40,6 +41,7 @@ Public-safe reverse proxy patterns for exposing AI tools and admin panels on a c
 - If an app serves assets from absolute root paths like `/assets/...`, prefer a dedicated subdomain.
 - If an app has an internal safe/base URL, respect that behavior instead of forcing a clean root path.
 - Public HTTPS entry should usually be `443` only; backend admin ports should stay local.
+- Lucky can work well in a hybrid state: keep a legacy path entry for compatibility while introducing a cleaner subdomain entry.
 
 ## Good Fit
 

@@ -12,6 +12,15 @@ Example public-safe records:
 
 If your server IP changes over time, keep these records inside your DDNS workflow instead of maintaining them manually.
 
+For a Lucky-like DDNS panel, it is often cleaner to place the root domain and all service subdomains into the same sync task, for example:
+
+- `example.com`
+- `panel.example.com`
+- `agent.example.com`
+- `api.example.com`
+
+This avoids partial drift where the root domain updates automatically but newer subdomains do not.
+
 ## 2. Install Or Reuse Caddy
 
 Use `Caddy` as the public HTTPS entrypoint.
@@ -40,6 +49,8 @@ panel.example.com {
 ```
 
 Use the redirect pattern only if the upstream app really expects an internal subpath such as `/panel/`.
+
+For Lucky-like panels, this pattern is often the correct one because the admin UI may be intentionally served behind a safe URL rather than `/`.
 
 ## 4. Keep A Legacy Path Entry Only If Needed
 
@@ -74,6 +85,8 @@ Example flow:
 3. insert IPv4 and IPv6 reject rules for the admin port except from localhost
 
 See `../examples/lucky-port-guard.service.example`.
+
+If the panel also supports DDNS or certificate management, keeping the panel reachable only through the reverse proxy still works well. The public HTTPS entry stays on `443`, while the real admin port remains a local implementation detail.
 
 ## 6. Validate The Final State
 

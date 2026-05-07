@@ -86,3 +86,33 @@ A practical mixed setup can look like this:
 - one browser AI tool moved from a broken path route to a subdomain because of root-relative frontend assets
 - one admin panel kept behind both a legacy path route and a new subdomain because its internal safe URL still points to a subpath
 - one local admin port protected with host firewall rules while still being reachable through the reverse proxy
+
+## Lucky-Like Panel Behavior
+
+Some admin panels expose an internal safe URL instead of serving their UI from `/`.
+
+Public-safe example:
+
+- admin listen port: `16601`
+- internal safe URL: `/panel`
+
+In that case, a clean migration strategy is:
+
+- keep `https://example.com/panel/` during transition
+- add `https://panel.example.com/` as the preferred new entry
+- redirect `https://panel.example.com/` to `https://panel.example.com/panel/`
+
+This gives users a stable subdomain without fighting the application's own URL model.
+
+## DDNS Interaction
+
+If the server public IP can change, keeping the subdomains inside the same DDNS workflow is often cleaner than mixing dynamic root records with separately managed static subdomain records.
+
+Public-safe example record set:
+
+- `example.com`
+- `panel.example.com`
+- `agent.example.com`
+- `api.example.com`
+
+That way, one DDNS task can keep all public entries aligned with the current server IP.

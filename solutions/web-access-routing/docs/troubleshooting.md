@@ -25,6 +25,8 @@ Fix:
 - add a root redirect on the subdomain
 - or route the app to the exact internal path it expects
 
+This is common with Lucky-like panels that use an internal safe URL such as `/panel/`.
+
 ## Legacy Path Still Needed
 
 If existing users already depend on `/panel/`, keep the path route for a transition period while documenting the new subdomain.
@@ -43,6 +45,8 @@ ss -ltnp | grep 16601
 iptables -S INPUT
 ip6tables -S INPUT
 ```
+
+If the panel is also your DDNS controller, do not assume that "because the app manages DNS" it must stay publicly reachable on its backend port. Usually the reverse proxy plus localhost-only backend access is the cleaner model.
 
 ## Caddy Works But Upstream HTTPS Fails
 
