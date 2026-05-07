@@ -60,6 +60,7 @@ Public-safe reverse proxy patterns for exposing AI tools and admin panels on a c
 
 - `docs/architecture.md` — routing design and migration rationale
 - `docs/setup.md` — DNS, Caddy, and port-guard setup steps
+- `docs/todo.md` — deferred follow-up work for additional routed services
 - `docs/troubleshooting.md` — common breakage patterns and checks
 - `examples/Caddyfile.example` — public-safe reverse proxy example
 - `examples/lucky-port-guard.service.example` — localhost-only port restriction example
@@ -74,6 +75,7 @@ Public-safe reverse proxy patterns for exposing AI tools and admin panels on a c
 
 - `docs/architecture.md`
 - `docs/setup.md`
+- `docs/todo.md`
 - `docs/troubleshooting.md`
 - `../../docs/screenshot-guidelines.md`
 

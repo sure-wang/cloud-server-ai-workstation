@@ -60,6 +60,7 @@
 
 - `docs/architecture.md`：路由设计与迁移理由
 - `docs/setup.md`：DNS、Caddy、端口防护配置步骤
+- `docs/todo.md`：更多待接入服务的延后工作说明
 - `docs/troubleshooting.md`：常见问题与检查方法
 - `examples/Caddyfile.example`：公开安全的反向代理示例
 - `examples/lucky-port-guard.service.example`：仅本机访问端口的示例服务
@@ -74,6 +75,7 @@
 
 - `docs/architecture.md`
 - `docs/setup.md`
+- `docs/todo.md`
 - `docs/troubleshooting.md`
 - `../../docs/screenshot-guidelines.md`
 
