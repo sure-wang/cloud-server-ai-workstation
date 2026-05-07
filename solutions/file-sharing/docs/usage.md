@@ -36,6 +36,20 @@ node scripts/lark_notify.js --text "cleaned old remote docs folder"
 
 Messages use a short `op` prefix by default.
 
+## Run Minimal Tests
+
+```bash
+npm test
+```
+
+Current minimal tests cover:
+
+- argument parsing
+- config merge behavior
+- remote path derivation
+- CLI JSON output parsing
+- supported / skipped file classification
+
 ## Remote Path Mapping
 
 If `remoteRootPath` is:

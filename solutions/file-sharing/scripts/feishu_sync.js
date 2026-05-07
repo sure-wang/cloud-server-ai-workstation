@@ -337,9 +337,27 @@ function main() {
   if (results.failed.length > 0) process.exitCode = 1;
 }
 
-try {
-  main();
-} catch (error) {
-  console.error(error.message);
-  process.exit(1);
+if (require.main === module) {
+  try {
+    main();
+  } catch (error) {
+    console.error(error.message);
+    process.exit(1);
+  }
 }
+
+module.exports = {
+  DEFAULT_CONFIG_FILE,
+  DEFAULT_STATE_FILE,
+  SUPPORTED_EXTENSIONS,
+  parseArgs,
+  loadJson,
+  mergeOptions,
+  ensureArray,
+  resolveStatePath,
+  deriveRemotePathSegments,
+  collectFiles,
+  titleFromPath,
+  parseJsonOutput,
+  buildSummary,
+};

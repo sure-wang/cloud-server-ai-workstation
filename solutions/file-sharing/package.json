@@ -1,0 +1,7 @@
+{
+  "name": "cloud-server-ai-workstation-file-sharing",
+  "private": true,
+  "scripts": {
+    "test": "node --test scripts/*.test.js"
+  }
+}
