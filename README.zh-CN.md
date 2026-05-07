@@ -22,6 +22,7 @@
 ## 方案模块
 
 - `solutions/file-sharing`：将云服务器上的本地文本文件同步到飞书 / Lark 云盘与在线文档，并支持简短消息通知。
+- `solutions/web-access-routing`：通过以子域名优先的 Caddy 反向代理模式，对外发布本地 AI 工具和管理面板。
 
 ## 为什么要做这个仓库
 
@@ -65,8 +66,9 @@
 ## 仓库结构概览
 
 ```text
-docs/                     仓库级说明和公开发布规范
-solutions/file-sharing/   第一个可运行的公开子方案
+docs/                         仓库级说明和公开发布规范
+solutions/file-sharing/       服务器文本同步到飞书 / Lark 文档
+solutions/web-access-routing/ 本地 Web 应用的子域名优先反向代理模式
 ```
 
 ## 语言说明
@@ -75,4 +77,6 @@ solutions/file-sharing/   第一个可运行的公开子方案
 - 中文仓库入口：`README.zh-CN.md`
 - 英文 file-sharing 入口：`solutions/file-sharing/README.md`
 - 中文 file-sharing 入口：`solutions/file-sharing/README.zh-CN.md`
+- 英文 web-access-routing 入口：`solutions/web-access-routing/README.md`
+- 中文 web-access-routing 入口：`solutions/web-access-routing/README.zh-CN.md`
 - 截图发布规范：`docs/screenshot-guidelines.md`

@@ -1,0 +1,13 @@
+[Unit]
+Description=Restrict admin panel port to localhost
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c 'iptables -C INPUT -p tcp --dport 16601 ! -s 127.0.0.1 -j REJECT 2>/dev/null || iptables -I INPUT 1 -p tcp --dport 16601 ! -s 127.0.0.1 -j REJECT; ip6tables -C INPUT -p tcp --dport 16601 ! -s ::1 -j REJECT 2>/dev/null || ip6tables -I INPUT 1 -p tcp --dport 16601 ! -s ::1 -j REJECT'
+ExecStop=/bin/sh -c 'iptables -C INPUT -p tcp --dport 16601 ! -s 127.0.0.1 -j REJECT 2>/dev/null && iptables -D INPUT -p tcp --dport 16601 ! -s 127.0.0.1 -j REJECT || true; ip6tables -C INPUT -p tcp --dport 16601 ! -s ::1 -j REJECT 2>/dev/null && ip6tables -D INPUT -p tcp --dport 16601 ! -s ::1 -j REJECT || true'
+
+[Install]
+WantedBy=multi-user.target

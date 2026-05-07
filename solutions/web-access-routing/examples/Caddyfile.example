@@ -1,0 +1,33 @@
+example.com {
+    encode zstd gzip
+
+    handle /panel* {
+        reverse_proxy https://127.0.0.1:16601 {
+            transport http {
+                tls_insecure_skip_verify
+            }
+        }
+    }
+
+    handle {
+        respond 404
+    }
+}
+
+agent.example.com {
+    encode zstd gzip
+    reverse_proxy http://127.0.0.1:4096
+}
+
+panel.example.com {
+    encode zstd gzip
+
+    @root path /
+    redir @root /panel/ 302
+
+    reverse_proxy https://127.0.0.1:16601 {
+        transport http {
+            tls_insecure_skip_verify
+        }
+    }
+}

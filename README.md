@@ -24,6 +24,7 @@ This repository is intentionally starting small.
 ## Solutions
 
 - `solutions/file-sharing` — sync local cloud-server text files to real Feishu/Lark Drive folders and online docs, with message notifications.
+- `solutions/web-access-routing` — publish local AI tools and admin panels through subdomain-first Caddy reverse proxy patterns.
 
 ## Why This Repository Exists
 
@@ -67,8 +68,9 @@ This repository is released under the [MIT License](./LICENSE).
 ## Repository Map
 
 ```text
-docs/                     repository-level overview and guidelines
-solutions/file-sharing/   first working public solution module
+docs/                         repository-level overview and guidelines
+solutions/file-sharing/       sync server text files to Feishu/Lark docs
+solutions/web-access-routing/ subdomain-first reverse proxy patterns for local web apps
 ```
 
 ## Language Notes
@@ -77,4 +79,6 @@ solutions/file-sharing/   first working public solution module
 - Chinese repository entry: `README.zh-CN.md`
 - English file-sharing module entry: `solutions/file-sharing/README.md`
 - Chinese file-sharing module entry: `solutions/file-sharing/README.zh-CN.md`
+- English web-access-routing module entry: `solutions/web-access-routing/README.md`
+- Chinese web-access-routing module entry: `solutions/web-access-routing/README.zh-CN.md`
 - Screenshot publishing guidance: `docs/screenshot-guidelines.md`
