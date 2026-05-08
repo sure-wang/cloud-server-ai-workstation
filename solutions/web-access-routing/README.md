@@ -26,14 +26,16 @@ Public-safe reverse proxy patterns for exposing AI tools and admin panels on a c
 - migration notes for path-based legacy entries
 - localhost-only protection for upstream admin ports using a small systemd firewall guard
 - Lucky-oriented notes for DDNS-managed subdomains and internal safe URL behavior
+- link-out path for pairing a deployed helper service such as `sub2api` with this routing module
 
 ## Typical Workflow
 
 1. Pick one subdomain per app.
 2. Point DNS records to the cloud server public IP.
-3. Route each app through `Caddy`.
-4. Keep old path routes temporarily if users already rely on them.
-5. Block direct public access to upstream admin ports if the app cannot bind to localhost by itself.
+3. Make sure the target app is already healthy on localhost.
+4. Route each app through `Caddy`.
+5. Keep old path routes temporarily if users already rely on them.
+6. Block direct public access to upstream admin ports if the app cannot bind to localhost by itself.
 
 ## Key Lessons From A Real Workstation
 
@@ -58,12 +60,12 @@ Public-safe reverse proxy patterns for exposing AI tools and admin panels on a c
 
 ## Directory Layout
 
-- `docs/architecture.md` — routing design and migration rationale
-- `docs/setup.md` — DNS, Caddy, and port-guard setup steps
-- `docs/todo.md` — deferred follow-up work for additional routed services
-- `docs/troubleshooting.md` — common breakage patterns and checks
-- `examples/Caddyfile.example` — public-safe reverse proxy example
-- `examples/lucky-port-guard.service.example` — localhost-only port restriction example
+- `docs/architecture.md` - routing design and migration rationale
+- `docs/setup.md` - DNS, Caddy, and port-guard setup steps
+- `docs/todo.md` - deferred follow-up work for additional routed services
+- `docs/troubleshooting.md` - common breakage patterns and checks
+- `examples/Caddyfile.example` - public-safe reverse proxy example
+- `examples/lucky-port-guard.service.example` - localhost-only port restriction example
 
 ## Safety Notes
 
@@ -73,6 +75,7 @@ Public-safe reverse proxy patterns for exposing AI tools and admin panels on a c
 
 ## Read Next
 
+- `../sub2api-deployment/README.md`
 - `docs/architecture.md`
 - `docs/setup.md`
 - `docs/todo.md`
