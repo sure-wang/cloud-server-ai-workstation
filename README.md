@@ -18,13 +18,15 @@ This repository is organized as a set of independent, reusable solution modules.
 This repository is intentionally starting small.
 
 - First published module: `solutions/file-sharing`
+- Newly added service deployment module: `solutions/sub2api-deployment`
 - Current focus: practical, reproducible, public-safe solution examples
 - Future direction: expand into a broader set of cloud-server AI/Agent environment patterns
 
 ## Solutions
 
-- `solutions/file-sharing` — sync local cloud-server text files to real Feishu/Lark Drive folders and online docs, with message notifications.
-- `solutions/web-access-routing` — publish local AI tools and admin panels through subdomain-first Caddy reverse proxy patterns.
+- `solutions/file-sharing` - sync local cloud-server text files to real Feishu/Lark Drive folders and online docs, with message notifications.
+- `solutions/sub2api-deployment` - deploy `sub2api` on a fresh cloud server with Docker Compose, low-memory guardrails, and recovery-oriented notes.
+- `solutions/web-access-routing` - publish local AI tools and admin panels through subdomain-first Caddy reverse proxy patterns.
 
 ## Why This Repository Exists
 
@@ -70,6 +72,7 @@ This repository is released under the [MIT License](./LICENSE).
 ```text
 docs/                         repository-level overview and guidelines
 solutions/file-sharing/       sync server text files to Feishu/Lark docs
+solutions/sub2api-deployment/ deploy sub2api on a fresh cloud server
 solutions/web-access-routing/ subdomain-first reverse proxy patterns for local web apps
 ```
 
@@ -79,6 +82,8 @@ solutions/web-access-routing/ subdomain-first reverse proxy patterns for local w
 - Chinese repository entry: `README.zh-CN.md`
 - English file-sharing module entry: `solutions/file-sharing/README.md`
 - Chinese file-sharing module entry: `solutions/file-sharing/README.zh-CN.md`
+- English sub2api deployment module entry: `solutions/sub2api-deployment/README.md`
+- Chinese sub2api deployment module entry: `solutions/sub2api-deployment/README.zh-CN.md`
 - English web-access-routing module entry: `solutions/web-access-routing/README.md`
 - Chinese web-access-routing module entry: `solutions/web-access-routing/README.zh-CN.md`
 - Screenshot publishing guidance: `docs/screenshot-guidelines.md`

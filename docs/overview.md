@@ -13,4 +13,4 @@ Each solution module should include:
 
 Operational screenshots should follow `docs/screenshot-guidelines.md` before public sharing.
 
-Published modules currently include `solutions/file-sharing` and `solutions/web-access-routing`.
+Published modules currently include `solutions/file-sharing`, `solutions/sub2api-deployment`, and `solutions/web-access-routing`.

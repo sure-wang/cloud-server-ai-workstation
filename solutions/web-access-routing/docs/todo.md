@@ -10,6 +10,9 @@ One practical next step is to extend the same subdomain-first pattern to small h
 - `sub2api.example.com`
 - other local single-purpose HTTP services
 
+For `sub2api`, the deployment-side recovery notes now live in `../../sub2api-deployment/README.md`.
+This module should stay focused on the public HTTPS entry, not on the Docker deployment itself.
+
 ## Why This Work Was Deferred
 
 Do not continue expanding public-facing routes while the underlying host situation is unstable.
@@ -33,13 +36,14 @@ Resume this work only after all of the following are true:
 
 ## Suggested Future Steps For `sub2api`
 
-1. identify the local upstream port
-2. verify whether the service expects `/` or a prefixed base path
-3. prefer `sub2api.example.com` over `example.com/sub2api/`
-4. add a dedicated `Caddy` site block
-5. decide whether the upstream port must be localhost-only
-6. validate browser access, API responses, and any websocket or SSE behavior
-7. only then remove any temporary path-based fallback, if one was added
+1. restore or confirm the local `sub2api` deployment first
+2. identify the local upstream port
+3. verify whether the service expects `/` or a prefixed base path
+4. prefer `sub2api.example.com` over `example.com/sub2api/`
+5. add a dedicated `Caddy` site block
+6. decide whether the upstream port must be localhost-only
+7. validate browser access, API responses, and any websocket or SSE behavior
+8. only then remove any temporary path-based fallback, if one was added
 
 ## Public-Safe Example
 
