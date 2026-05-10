@@ -11,6 +11,14 @@
 - 截图发布规范：`docs/screenshot-guidelines.md`
 - 第一个完整方案：`solutions/file-sharing/`
 
+## 平台范围
+
+当前已经沉淀的案例模块，默认以 Linux 云服务器为验证环境，已在 Ubuntu 与 Alibaba Cloud Linux 上跑通。
+
+大部分运维示例都假设存在 Linux 服务器常见组件和命令，例如 `systemd`、Docker Engine / Docker Compose、运行在公网主机上的 Caddy、SSH 访问，以及 `ss`、`journalctl`、`curl` 等 shell 命令。
+
+后续如果扩展到 macOS 或 Windows，建议把它们作为单独的平台变体来写，而不是默认复用 Linux 专用命令。
+
 ## 当前状态
 
 这个仓库目前是有意识地从小做起：

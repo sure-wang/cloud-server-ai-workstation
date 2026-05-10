@@ -9,6 +9,7 @@ Public-safe deployment notes for restoring `sub2api` on a fresh cloud server.
 - App: `sub2api`
 - Deployment style: `Docker Compose`
 - Target host type: low-cost cloud servers and lightweight VPS instances
+- Current platform assumption: Linux cloud server with SSH, Docker Engine, and Docker Compose; this pattern has been run on Ubuntu and Alibaba Cloud Linux
 - Recovery posture: treat each server as rebuildable
 - Follow-up path: pair this module with `../web-access-routing/` when you are ready to bind a domain and serve HTTPS
 
@@ -62,6 +63,7 @@ Public-safe deployment notes for restoring `sub2api` on a fresh cloud server.
 - `docs/architecture.md` - deployment boundaries and recovery model
 - `docs/setup.md` - step-by-step bootstrap and deployment flow
 - `docs/troubleshooting.md` - common breakage patterns and checks
+- `docs/localhost-behind-caddy.md` - bind the app port to localhost after HTTPS routing is ready
 - `examples/env.override.example` - public-safe values you may want to override after generation
 
 ## Safety Notes
@@ -75,6 +77,7 @@ Public-safe deployment notes for restoring `sub2api` on a fresh cloud server.
 - `docs/architecture.md`
 - `docs/setup.md`
 - `docs/troubleshooting.md`
+- `docs/localhost-behind-caddy.md`
 - `../web-access-routing/README.md`
 - `../../docs/screenshot-guidelines.md`
 

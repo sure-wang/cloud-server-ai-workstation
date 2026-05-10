@@ -1,0 +1,32 @@
+{
+    email admin@example.com
+}
+
+agent.example.com {
+    encode zstd gzip
+
+    # Keep browser agent entrypoints behind an extra reverse-proxy password.
+    # Generate the hash on the server:
+    #   caddy hash-password --plaintext 'replace-with-private-password'
+    basic_auth {
+        agent-user $2a$14$replace_with_caddy_hash
+    }
+
+    reverse_proxy http://127.0.0.1:4096
+}
+
+panel.example.com {
+    encode zstd gzip
+
+    # Lucky-like panels can use an internal safe URL.
+    # If the panel safe entry is /lucky/, make the subdomain root land there.
+    @root path /
+    redir @root /lucky/ 302
+
+    reverse_proxy http://127.0.0.1:16601
+}
+
+api.example.com {
+    encode zstd gzip
+    reverse_proxy http://127.0.0.1:8080
+}

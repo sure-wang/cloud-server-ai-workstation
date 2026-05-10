@@ -13,6 +13,14 @@ This repository is organized as a set of independent, reusable solution modules.
 - Screenshot publishing guidance: `docs/screenshot-guidelines.md`
 - First complete solution: `solutions/file-sharing/`
 
+## Platform Scope
+
+The current case modules are validated against Linux cloud servers, including Ubuntu and Alibaba Cloud Linux.
+
+Most operational examples assume Linux server conventions such as `systemd`, Docker Engine / Docker Compose, Caddy on a public host, SSH access, and shell commands like `ss`, `journalctl`, and `curl`.
+
+Future modules may cover macOS or Windows workflows, but those platforms should be documented as separate variants instead of silently reusing Linux-only commands.
+
 ## Current Status
 
 This repository is intentionally starting small.

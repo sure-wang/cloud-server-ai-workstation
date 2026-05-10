@@ -1,5 +1,15 @@
 # TODO
 
+## Completed Baseline: Additional Service Subdomains
+
+The basic `sub2api` subdomain pattern is now captured in:
+
+- `opencode-lucky-sub2api.md`
+- `../examples/Caddyfile.opencode-lucky-sub2api.example`
+- `../../sub2api-deployment/docs/localhost-behind-caddy.md`
+
+Future work should refine this only after another real setup exposes new edge cases.
+
 ## Deferred Follow-Up: Additional Service Subdomains
 
 This module currently documents the routing patterns for browser AI tools and admin panels.
