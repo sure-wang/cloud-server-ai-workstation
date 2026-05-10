@@ -9,6 +9,7 @@
 - 应用：`sub2api`
 - 部署方式：`Docker Compose`
 - 目标主机：轻量云服务器 / 低成本 VPS
+- 当前平台假设：具备 SSH、Docker Engine 和 Docker Compose 的 Linux 云服务器；该模式已在 Ubuntu 与 Alibaba Cloud Linux 上跑通
 - 恢复思路：把每台服务器都当成可重建的临时宿主
 - 后续衔接：当你要绑定域名并启用 HTTPS 时，再接到 `../web-access-routing/`
 

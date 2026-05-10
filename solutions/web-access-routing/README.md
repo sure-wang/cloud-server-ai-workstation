@@ -11,6 +11,7 @@ Public-safe reverse proxy patterns for exposing AI tools and admin panels on a c
 - Compatibility fallback: keep selected legacy path entries during migration
 - Security hardening: restrict upstream admin ports to localhost when possible
 - Target use cases: browser-based AI tools, admin panels, internal helper services
+- Current platform assumption: Linux cloud server with `systemd`, Caddy, Docker, and SSH access; this pattern has been run on Ubuntu and Alibaba Cloud Linux
 
 ## What It Solves
 
@@ -62,9 +63,12 @@ Public-safe reverse proxy patterns for exposing AI tools and admin panels on a c
 
 - `docs/architecture.md` - routing design and migration rationale
 - `docs/setup.md` - DNS, Caddy, and port-guard setup steps
+- `docs/opencode-lucky-sub2api.md` - public-safe three-service routing recovery pattern
 - `docs/todo.md` - deferred follow-up work for additional routed services
 - `docs/troubleshooting.md` - common breakage patterns and checks
 - `examples/Caddyfile.example` - public-safe reverse proxy example
+- `examples/Caddyfile.opencode-lucky-sub2api.example` - OpenCode, Lucky, and sub2api subdomain example
+- `examples/opencode.service.example` - local-only OpenCode systemd service example
 - `examples/lucky-port-guard.service.example` - localhost-only port restriction example
 
 ## Safety Notes
@@ -78,6 +82,7 @@ Public-safe reverse proxy patterns for exposing AI tools and admin panels on a c
 - `../sub2api-deployment/README.md`
 - `docs/architecture.md`
 - `docs/setup.md`
+- `docs/opencode-lucky-sub2api.md`
 - `docs/todo.md`
 - `docs/troubleshooting.md`
 - `../../docs/screenshot-guidelines.md`

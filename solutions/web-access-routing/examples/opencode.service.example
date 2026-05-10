@@ -1,0 +1,24 @@
+[Unit]
+Description=OpenCode headless server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/ai-workstation/cloud-server-ai-workstation
+Environment=HOME=/root
+
+# Store the real password outside the public repository.
+# Example private drop-in:
+#   /etc/systemd/system/opencode.service.d/private.conf
+#   [Service]
+#   Environment=OPENCODE_SERVER_PASSWORD=replace-with-private-password
+Environment=OPENCODE_SERVER_PASSWORD=replace-with-private-password
+
+ExecStart=/usr/local/bin/opencode serve --hostname 127.0.0.1 --port 4096 --cors https://agent.example.com
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

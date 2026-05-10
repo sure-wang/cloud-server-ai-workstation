@@ -107,3 +107,13 @@ Target outcome:
 - public HTTPS works
 - direct `https://SERVER_IP:ADMIN_PORT/...` access no longer works from external clients
 - reverse proxy access still works
+
+## 7. Three-Service AI Workstation Pattern
+
+For a concrete OpenCode + Lucky + sub2api shape, see:
+
+- `opencode-lucky-sub2api.md`
+- `../examples/Caddyfile.opencode-lucky-sub2api.example`
+- `../examples/opencode.service.example`
+
+This pattern also documents the human-assisted steps that should not be treated as fully automated, such as Lucky panel setup, DDNS credential entry, safe-entry configuration, and backup-before-reset workflows.
