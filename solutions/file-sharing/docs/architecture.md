@@ -43,7 +43,7 @@ feishu_sync.js
    +--> lark_notify.js / lark-cli im +messages-send
 ```
 
-## Planned Restore Flow
+## Restore Flow
 
 Remote-to-local support should be modeled as restore, not bidirectional sync.
 
