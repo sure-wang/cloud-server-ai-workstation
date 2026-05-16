@@ -8,12 +8,14 @@ const { spawnSync } = require("child_process");
 const SOLUTION_ROOT = path.resolve(__dirname, "..");
 const DEFAULT_STATE_FILE = path.resolve(SOLUTION_ROOT, "data/state.json");
 const DEFAULT_CONFIG_FILE = path.resolve(SOLUTION_ROOT, "config/config.json");
+const MANIFEST_FILE_NAME = ".cloud_server_sync_manifest.json";
 const SUPPORTED_EXTENSIONS = new Set([".md", ".txt"]);
 const PLACEHOLDER_REMOTE_ROOTS = new Set(["CHANGE_ME_SERVER_NAME", "example_server_sync"]);
 const WRITE_INTERVAL_MS = 450;
 const MAX_RETRIES = 4;
 
 let lastWriteAt = 0;
+let ensureFolderOverride = null;
 
 function printUsage() {
   console.log(`Usage: feishu_sync.js [options]\n\nOptions:\n  --source <path>       File or directory to sync\n  --folder-token <id>   Create new docs under this Feishu folder\n  --config <path>       Config file path (default: ${DEFAULT_CONFIG_FILE})\n  --notify-to <open_id> Send summary to this open_id\n  --state-file <path>   Metadata file path (default: ${DEFAULT_STATE_FILE})\n  --dry-run             Show planned changes without calling Feishu\n  -h, --help            Show this help`);
@@ -85,6 +87,11 @@ function deriveRemotePathSegments(sourceRoot, options) {
   return [...rootSegments, path.basename(normalizedSource)];
 }
 
+function deriveRemoteRootSegments(options) {
+  if (options.remoteFolderPath) return ensureArray(options.remoteFolderPath, "remoteFolderPath");
+  return ensureArray(options.remoteRootPath, "remoteRootPath");
+}
+
 function remotePathForFile(filePath, sourceRoot, options) {
   const relativeDir = path.dirname(path.relative(sourceRoot, path.resolve(filePath)));
   const folderSegments = options.folderToken && !options.remoteRootPath ? [`folder-token:${options.folderToken}`] : deriveRemotePathSegments(sourceRoot, options);
@@ -108,6 +115,20 @@ function loadState(stateFile) {
 function saveState(stateFile, state) {
   ensureParentDir(stateFile);
   fs.writeFileSync(stateFile, `${JSON.stringify(state, null, 2)}\n`, "utf8");
+}
+
+function buildManifest(state, options) {
+  return {
+    version: 1,
+    generatedAt: new Date().toISOString(),
+    remoteRootPath: options.folderToken ? [`folder-token:${options.folderToken}`] : deriveRemoteRootSegments(options),
+    files: state.files || {},
+  };
+}
+
+function writeManifestFile(manifest, manifestPath) {
+  ensureParentDir(manifestPath);
+  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 }
 
 function sha256(filePath) {
@@ -238,6 +259,10 @@ function ensureFolder(parentToken, name) {
   return token;
 }
 
+function callEnsureFolder(parentToken, name) {
+  return (ensureFolderOverride || ensureFolder)(parentToken, name);
+}
+
 function ensureRemoteFolderToken(options, relativeDir) {
   if (options.folderToken) return options.folderToken;
   const remotePath = deriveRemotePathSegments(options.source, options);
@@ -247,6 +272,40 @@ function ensureRemoteFolderToken(options, relativeDir) {
     for (const segment of relativeDir.split(path.sep).filter(Boolean)) token = ensureFolder(token, segment);
   }
   return token;
+}
+
+function ensureRemoteRootFolderToken(options) {
+  if (options.folderToken) return options.folderToken;
+  const remoteRoot = deriveRemoteRootSegments(options);
+  let token = "";
+  for (const segment of remoteRoot) token = callEnsureFolder(token, segment);
+  return token;
+}
+
+function __setEnsureFolderForTest(fn) {
+  ensureFolderOverride = fn;
+}
+
+function findFileInFolder(folderToken, name) {
+  const items = listFolderItems(folderToken);
+  return items.filter((item) => item.type === "file" && item.name === name).sort((a, b) => Number(a.created_time || 0) - Number(b.created_time || 0))[0] || null;
+}
+
+function uploadManifest(manifestPath, folderToken, existingFileToken, commandRunner = runWriteCommand) {
+  const args = ["drive", "+upload", "--file", manifestPath, "--name", MANIFEST_FILE_NAME];
+  if (existingFileToken) args.push("--file-token", existingFileToken);
+  else if (folderToken) args.push("--folder-token", folderToken);
+  const { stdout } = commandRunner("lark-cli", args);
+  const parsed = parseJsonOutput(stdout);
+  return parsed.data || parsed;
+}
+
+function syncManifest(state, options) {
+  const rootToken = ensureRemoteRootFolderToken(options);
+  const existingManifest = findFileInFolder(rootToken, MANIFEST_FILE_NAME);
+  const manifestPath = path.resolve(SOLUTION_ROOT, "data", MANIFEST_FILE_NAME);
+  writeManifestFile(buildManifest(state, options), manifestPath);
+  return uploadManifest(manifestPath, rootToken, existingManifest?.token);
 }
 
 function createDoc(filePath, title, folderToken) {
@@ -349,12 +408,17 @@ function main() {
       results.failed.push({ filePath: path.resolve(filePath), error: error.message });
     }
   }
-  if (!options.dryRun) saveState(options.stateFile, state);
+  let manifestResult = null;
+  if (!options.dryRun) {
+    saveState(options.stateFile, state);
+    manifestResult = syncManifest(state, options);
+  }
   const summary = buildSummary(results, skipped, path.resolve(options.source), options.dryRun, {
     remoteRootPath: options.remoteFolderPath || ensureArray(options.remoteRootPath, "remoteRootPath"),
     warnings,
   });
   console.log(summary);
+  if (manifestResult?.file_token || manifestResult?.token) console.log(`Manifest uploaded: ${manifestResult.file_token || manifestResult.token}`);
   if (!options.dryRun) {
     const notifyTo = options.notifyTo || getDefaultNotifyTo();
     try {
@@ -380,6 +444,7 @@ if (require.main === module) {
 module.exports = {
   DEFAULT_CONFIG_FILE,
   DEFAULT_STATE_FILE,
+  MANIFEST_FILE_NAME,
   PLACEHOLDER_REMOTE_ROOTS,
   SUPPORTED_EXTENSIONS,
   parseArgs,
@@ -388,10 +453,20 @@ module.exports = {
   ensureArray,
   validateRemoteRootPath,
   resolveStatePath,
+  loadState,
+  saveState,
+  buildManifest,
+  writeManifestFile,
   deriveRemotePathSegments,
+  deriveRemoteRootSegments,
+  ensureRemoteRootFolderToken,
   remotePathForFile,
   collectFiles,
   titleFromPath,
   parseJsonOutput,
+  ensureFolder,
+  findFileInFolder,
+  uploadManifest,
+  __setEnsureFolderForTest,
   buildSummary,
 };
