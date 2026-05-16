@@ -65,7 +65,7 @@ function collectRestoreItems(state, restoreRoot, overwrite) {
   return Object.entries(files).sort(([a], [b]) => a.localeCompare(b)).map(([originalPath, entry]) => {
     const targetPath = targetPathForOriginal(originalPath, restoreRoot);
     const exportPath = exportPathForTarget(targetPath);
-    const exists = fs.existsSync(exportPath);
+    const exists = fs.existsSync(targetPath);
     let action = "restore";
     let reason = "";
     if (!entry.docId) {
@@ -82,6 +82,10 @@ function collectRestoreItems(state, restoreRoot, overwrite) {
 }
 
 function exportPathForTarget(targetPath) {
+  return targetPath;
+}
+
+function fallbackExportPathForTarget(targetPath) {
   return targetPath.endsWith(".md") ? targetPath : `${targetPath}.md`;
 }
 
@@ -105,10 +109,20 @@ function runCommand(command, commandArgs, cwd) {
   return { stdout: (result.stdout || "").trim(), stderr: (result.stderr || "").trim() };
 }
 
+function fixExportSuffix(outputDir, expectPath, fallbackPath) {
+  if (fs.existsSync(expectPath)) return expectPath;
+  if (fallbackPath && fs.existsSync(fallbackPath)) {
+    fs.renameSync(fallbackPath, expectPath);
+    return expectPath;
+  }
+  return null;
+}
+
 function exportDoc(item, overwrite, commandRunner = runCommand) {
-  const exportPath = item.exportPath || exportPathForTarget(item.targetPath);
-  ensureParentDir(exportPath);
-  const outputDir = path.dirname(exportPath);
+  const targetPath = item.targetPath;
+  ensureParentDir(targetPath);
+  const outputDir = path.dirname(targetPath);
+  const targetName = path.basename(targetPath);
   const args = [
     "drive",
     "+export",
@@ -121,10 +135,19 @@ function exportDoc(item, overwrite, commandRunner = runCommand) {
     "--output-dir",
     ".",
     "--file-name",
-    path.basename(exportPath),
+    targetName,
   ];
   if (overwrite) args.push("--overwrite");
   commandRunner("lark-cli", args, outputDir);
+  const finalPath = fixExportSuffix(outputDir, targetPath, fallbackExportPathForTarget(targetPath));
+  if (finalPath) {
+    item.exportPath = finalPath;
+  } else {
+    const exportPath = item.exportPath || exportPathForTarget(item.targetPath);
+    if (fs.existsSync(exportPath)) {
+      item.exportPath = exportPath;
+    }
+  }
 }
 
 function buildSummary(results, restoreRoot, dryRun) {
@@ -199,6 +222,7 @@ module.exports = {
   validateRestoreRoot,
   targetPathForOriginal,
   exportPathForTarget,
+  fallbackExportPathForTarget,
   collectRestoreItems,
   exportDoc,
   buildSummary,

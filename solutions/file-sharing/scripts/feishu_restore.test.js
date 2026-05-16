@@ -36,13 +36,17 @@ test("exportPathForTarget keeps markdown targets unchanged", () => {
   assert.equal(restore.exportPathForTarget("/tmp/restore/a.md"), "/tmp/restore/a.md");
 });
 
-test("exportPathForTarget appends markdown extension for non-markdown targets", () => {
-  assert.equal(restore.exportPathForTarget("/tmp/restore/checklist.txt"), "/tmp/restore/checklist.txt.md");
+test("exportPathForTarget preserves non-markdown target names", () => {
+  assert.equal(restore.exportPathForTarget("/tmp/restore/checklist.txt"), "/tmp/restore/checklist.txt");
+});
+
+test("fallbackExportPathForTarget captures lark markdown suffix behavior", () => {
+  assert.equal(restore.fallbackExportPathForTarget("/tmp/restore/checklist.txt"), "/tmp/restore/checklist.txt.md");
 });
 
 test("collectRestoreItems marks existing targets as skipped by default", () => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-test-"));
-  const target = path.join(tempRoot, "srv/demo/a.txt.md");
+  const target = path.join(tempRoot, "srv/demo/a.txt");
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, "existing", "utf8");
 
@@ -117,13 +121,36 @@ test("exportDoc runs lark export from target directory with relative output", ()
   assert.equal(calls[0].cwd, "/tmp/restore/root/demo");
   assert.deepEqual(calls[0].args.slice(0, 8), ["drive", "+export", "--doc-type", "docx", "--file-extension", "markdown", "--token", "doc_xxx"]);
   assert.equal(calls[0].args[calls[0].args.indexOf("--output-dir") + 1], ".");
-  assert.equal(calls[0].args[calls[0].args.indexOf("--file-name") + 1], "checklist.txt.md");
+  assert.equal(calls[0].args[calls[0].args.indexOf("--file-name") + 1], "checklist.txt");
+});
+
+test("exportDoc renames lark markdown suffix back to target path", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-export-test-"));
+  const targetPath = path.join(tempRoot, "checklist.txt");
+
+  const item = {
+    docId: "doc_xxx",
+    targetPath,
+    exportPath: targetPath,
+  };
+
+  restore.exportDoc(item, false, () => {
+    fs.writeFileSync(`${targetPath}.md`, "exported", "utf8");
+    return { stdout: "", stderr: "" };
+  });
+
+  assert.equal(item.exportPath, targetPath);
+  assert.equal(fs.existsSync(targetPath), true);
+  assert.equal(fs.existsSync(`${targetPath}.md`), false);
+  assert.equal(fs.readFileSync(targetPath, "utf8"), "exported");
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
 });
 
 test("buildSummary reports restore actions", () => {
   const summary = restore.buildSummary(
     {
-      restored: [{ docId: "doc_xxx", targetPath: "/tmp/restore/a.txt", exportPath: "/tmp/restore/a.txt.md" }],
+      restored: [{ docId: "doc_xxx", targetPath: "/tmp/restore/a.txt", exportPath: "/tmp/restore/a.txt" }],
       overwritten: [],
       skipped: [{ originalPath: "/srv/b.md", reason: "target exists" }],
       failed: [],
@@ -136,5 +163,5 @@ test("buildSummary reports restore actions", () => {
   assert.match(summary, /Restore root: \/tmp\/restore/);
   assert.match(summary, /Restored: 1/);
   assert.match(summary, /Skipped: 1/);
-  assert.match(summary, /doc_xxx -> \/tmp\/restore\/a\.txt\.md/);
+  assert.match(summary, /doc_xxx -> \/tmp\/restore\/a\.txt/);
 });
