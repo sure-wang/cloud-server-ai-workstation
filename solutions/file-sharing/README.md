@@ -29,9 +29,9 @@ One-way sync from local cloud-server text files to real Feishu/Lark Drive folder
 
 ## Planned Restore Workflow
 
-Remote-to-local support should be treated as a separate restore workflow, not full bidirectional sync.
+Remote-to-local support is treated as a separate restore workflow, not full bidirectional sync.
 
-The intended restore use case is recovery or migration from previously synced Feishu/Lark online docs back to a chosen local restore directory. A future restore script should rely on `data/state.json`, export known docx documents through `lark-cli drive +export`, and write into an explicit restore root after a dry-run review.
+The restore use case is recovery or migration from previously synced Feishu/Lark online docs back to a chosen local restore directory. `scripts/feishu_restore.js` relies on `data/state.json`, exports known docx documents through `lark-cli drive +export`, and writes into an explicit restore root after a dry-run review.
 
 Restore should not overwrite original source paths, delete local files, or resolve local/remote edit conflicts by default.
 
@@ -134,7 +134,7 @@ Examples:
 ## Current Limitations
 
 - state is keyed by absolute local path, so local moves/renames are treated as new remote docs
-- remote-to-local restore is planned as a separate recovery workflow, not active bidirectional sync
+- remote-to-local restore is a separate recovery workflow, not active bidirectional sync
 - remote-only cleanup is a separate manual operation, not part of normal sync
 - only text-oriented files are handled in the current public version
 

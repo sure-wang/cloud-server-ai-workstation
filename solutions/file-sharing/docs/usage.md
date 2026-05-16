@@ -38,17 +38,29 @@ node scripts/lark_notify.js --text "cleaned old remote docs folder"
 
 Messages use a short `op` prefix by default.
 
-## Planned Restore Workflow
+## Restore Workflow
 
-Remote-to-local restore is planned as a separate recovery workflow. It should not be treated as active bidirectional sync.
+Remote-to-local restore is a separate recovery workflow. It should not be treated as active bidirectional sync.
 
-Future restore command shape:
+Preview restore actions:
 
 ```bash
 node scripts/feishu_restore.js --dry-run --restore-root /path/to/restore
 ```
 
-Expected safety defaults:
+Run restore after reviewing the preview:
+
+```bash
+node scripts/feishu_restore.js --execute --restore-root /path/to/restore
+```
+
+Allow overwriting existing files only when explicitly requested:
+
+```bash
+node scripts/feishu_restore.js --execute --overwrite --restore-root /path/to/restore
+```
+
+Safety defaults:
 
 - read `data/state.json` to restore only known synced docs
 - export Feishu/Lark docx documents as Markdown through `lark-cli drive +export`
