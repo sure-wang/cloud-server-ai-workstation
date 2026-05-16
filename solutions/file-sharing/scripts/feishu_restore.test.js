@@ -12,6 +12,20 @@ test("parseArgs defaults to dry run", () => {
   assert.equal(args.restoreRoot, "/tmp/restore");
   assert.equal(args.dryRun, true);
   assert.equal(args.overwrite, false);
+  assert.equal(args.manifestOutput, restore.DEFAULT_MANIFEST_DOWNLOAD);
+});
+
+test("parseArgs accepts cloud manifest download flags", () => {
+  const args = restore.parseArgs(["--restore-root", "/tmp/restore", "--manifest-file-token", "box_xxx", "--manifest-output", "/tmp/manifest.json"]);
+
+  assert.equal(args.manifestFileToken, "box_xxx");
+  assert.equal(args.manifestOutput, "/tmp/manifest.json");
+});
+
+test("parseArgs accepts cloud manifest folder token", () => {
+  const args = restore.parseArgs(["--restore-root", "/tmp/restore", "--manifest-folder-token", "https://my.feishu.cn/drive/folder/fld_xxx"]);
+
+  assert.equal(args.manifestFolderToken, "https://my.feishu.cn/drive/folder/fld_xxx");
 });
 
 test("parseArgs enables execution and overwrite", () => {
@@ -34,6 +48,58 @@ test("targetPathForOriginal preserves absolute path below restore root", () => {
 
 test("exportPathForTarget keeps markdown targets unchanged", () => {
   assert.equal(restore.exportPathForTarget("/tmp/restore/a.md"), "/tmp/restore/a.md");
+});
+
+test("downloadManifest downloads file token to output path", () => {
+  const calls = [];
+  const output = restore.downloadManifest("box_xxx", "/tmp/manifest.json", (command, args) => {
+    calls.push({ command, args });
+    return { stdout: "", stderr: "" };
+  });
+
+  assert.equal(output, "/tmp/manifest.json");
+  assert.deepEqual(calls[0], {
+    command: "lark-cli",
+    args: ["drive", "+download", "--file-token", "box_xxx", "--output", "/tmp/manifest.json", "--overwrite"],
+  });
+});
+
+test("parseFolderToken extracts token from Drive folder URL", () => {
+  assert.equal(restore.parseFolderToken("https://my.feishu.cn/drive/folder/fld_xxx?from=copy"), "fld_xxx");
+});
+
+test("findManifestInFolder finds manifest file by folder token", () => {
+  const manifest = restore.findManifestInFolder("fld_xxx", (command, args) => {
+    assert.equal(command, "lark-cli");
+    assert.deepEqual(args, ["api", "GET", "/open-apis/drive/v1/files", "--params", JSON.stringify({ folder_token: "fld_xxx", page_size: 200 })]);
+    return {
+      stdout: JSON.stringify({
+        data: {
+          files: [
+            { name: "notes", type: "folder", token: "folder_xxx" },
+            { name: restore.MANIFEST_FILE_NAME, type: "file", token: "box_xxx", created_time: "2" },
+          ],
+        },
+      }),
+      stderr: "",
+    };
+  });
+
+  assert.equal(manifest.token, "box_xxx");
+});
+
+test("downloadManifestFromFolder downloads manifest discovered in folder", () => {
+  const calls = [];
+  const output = restore.downloadManifestFromFolder("https://my.feishu.cn/drive/folder/fld_xxx", "/tmp/manifest.json", (command, args) => {
+    calls.push({ command, args });
+    if (args[0] === "api") {
+      return { stdout: JSON.stringify({ data: { files: [{ name: restore.MANIFEST_FILE_NAME, type: "file", token: "box_xxx" }] } }), stderr: "" };
+    }
+    return { stdout: "", stderr: "" };
+  });
+
+  assert.equal(output, "/tmp/manifest.json");
+  assert.deepEqual(calls[1].args, ["drive", "+download", "--file-token", "box_xxx", "--output", "/tmp/manifest.json", "--overwrite"]);
 });
 
 test("exportPathForTarget preserves non-markdown target names", () => {
@@ -65,6 +131,29 @@ test("collectRestoreItems marks existing targets as skipped by default", () => {
   assert.equal(items[0].action, "skip");
   assert.equal(items[0].reason, "target exists");
   assert.equal(items[0].exportPath, target);
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
+test("collectRestoreItems skips when fallback markdown export already exists", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-test-"));
+  const fallback = path.join(tempRoot, "srv/demo/a.txt.md");
+  fs.mkdirSync(path.dirname(fallback), { recursive: true });
+  fs.writeFileSync(fallback, "existing fallback", "utf8");
+
+  const items = restore.collectRestoreItems(
+    {
+      version: 1,
+      files: {
+        "/srv/demo/a.txt": { docId: "doc_xxx", title: "a" },
+      },
+    },
+    tempRoot,
+    false
+  );
+
+  assert.equal(items[0].action, "skip");
+  assert.equal(items[0].reason, "target exists");
 
   fs.rmSync(tempRoot, { recursive: true, force: true });
 });

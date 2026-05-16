@@ -15,6 +15,7 @@ One-way sync from local cloud-server text files to real Feishu/Lark Drive folder
 ## What It Solves
 
 - Keep selected server-side `.md` / `.txt` files available in Feishu/Lark online docs.
+- Keep a cloud manifest file for recovery on a fresh machine.
 - Preserve local absolute path structure under a configurable remote root folder.
 - Send short IM notifications for important operations and sync summaries.
 - Make the workflow reusable across future AI/Agent sessions.
@@ -26,12 +27,13 @@ One-way sync from local cloud-server text files to real Feishu/Lark Drive folder
 - One online doc per local file
 - Real Drive folders are auto-created as needed
 - Existing docs are updated in place with overwrite mode
+- A `.cloud_server_sync_manifest.json` file is uploaded to the remote root after live sync
 
 ## Planned Restore Workflow
 
 Remote-to-local support is treated as a separate restore workflow, not full bidirectional sync.
 
-The restore use case is recovery or migration from previously synced Feishu/Lark online docs back to a chosen local restore directory. `scripts/feishu_restore.js` relies on `data/state.json`, exports known docx documents through `lark-cli drive +export`, and writes into an explicit restore root after a dry-run review.
+The restore use case is recovery or migration from previously synced Feishu/Lark online docs back to a chosen local restore directory. `scripts/feishu_restore.js` can use local `data/state.json` or download the cloud `.cloud_server_sync_manifest.json` by file token, exports known docx documents through `lark-cli drive +export`, and writes into an explicit restore root after a dry-run review.
 
 Restore should not overwrite original source paths, delete local files, or resolve local/remote edit conflicts by default.
 
@@ -127,6 +129,7 @@ Examples:
 ## Safety Notes
 
 - Do not commit real `config.json` or `data/state.json`
+- Do not commit `data/.cloud_server_sync_manifest.json`; it is a runtime recovery file
 - Do not run live sync while `remoteRootPath` still contains `CHANGE_ME_SERVER_NAME` or an example value
 - Do not live-sync sensitive system directories before a `--dry-run` review
 - If you share logs, screenshots, or notifications publicly, redact local paths, doc IDs, folder tokens, and other runtime metadata

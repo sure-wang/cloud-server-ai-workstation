@@ -23,8 +23,13 @@
    - IM notifications
 
 5. Local state
-   - `data/state.json`
-   - maps absolute local paths to remote doc IDs and folder tokens
+    - `data/state.json`
+    - maps absolute local paths to remote doc IDs and folder tokens
+
+6. Cloud manifest
+   - `.cloud_server_sync_manifest.json`
+   - uploaded as a normal Drive file under the remote root after live sync
+   - lets a fresh machine recover the path-to-doc mapping without local state
 
 ## Data Flow
 
@@ -38,7 +43,9 @@ feishu_sync.js
    |
    +--> lark-cli docs +create / +update
    |
-   +--> data/state.json
+    +--> data/state.json
+   |
+   +--> lark-cli drive +upload (.cloud_server_sync_manifest.json)
    |
    +--> lark_notify.js / lark-cli im +messages-send
 ```
@@ -48,7 +55,13 @@ feishu_sync.js
 Remote-to-local support should be modeled as restore, not bidirectional sync.
 
 ```text
-Feishu/Lark online docs
+Cloud manifest file token
+   |
+   v
+lark-cli drive +download
+   |
+   v
+Feishu/Lark online docs from manifest doc IDs
    |
    v
 lark-cli drive +export
@@ -58,7 +71,7 @@ lark-cli drive +export
    +--> restore report / notification
 ```
 
-The restore flow should use `data/state.json` to identify documents originally created by this solution and to reconstruct the original absolute path under a separate restore root.
+The restore flow should use `data/state.json` or the downloaded cloud manifest to identify documents originally created by this solution and to reconstruct the original absolute path under a separate restore root.
 
 For example, a document originally synced from `/srv/demo/notes/a.md` should restore to a path such as `/restore/cloud_server_aly/srv/demo/notes/a.md`, not directly back to `/srv/demo/notes/a.md` by default.
 

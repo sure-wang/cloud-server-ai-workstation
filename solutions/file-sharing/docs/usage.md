@@ -42,11 +42,27 @@ Messages use a short `op` prefix by default.
 
 Remote-to-local restore is a separate recovery workflow. It should not be treated as active bidirectional sync.
 
+Live sync uploads `.cloud_server_sync_manifest.json` as a normal Drive file under the configured remote root. Keep that file available; it lets a fresh machine recover the original path-to-doc mapping without local `data/state.json`.
+
 Preview restore actions:
 
 ```bash
 node scripts/feishu_restore.js --dry-run --restore-root /path/to/restore
 ```
+
+Preview restore actions on a fresh machine by downloading the cloud manifest file first:
+
+```bash
+node scripts/feishu_restore.js --dry-run --manifest-file-token <manifest_file_token> --restore-root /path/to/restore
+```
+
+If you have the remote root folder URL or token instead of the manifest file token, let the script find `.cloud_server_sync_manifest.json` in that folder:
+
+```bash
+node scripts/feishu_restore.js --dry-run --manifest-folder-token <folder_url_or_token> --restore-root /path/to/restore
+```
+
+Both manifest options download a local runtime copy to `data/.cloud_server_sync_manifest.json` by default. This file is ignored by Git and should not be committed.
 
 Run restore after reviewing the preview:
 
@@ -63,6 +79,7 @@ node scripts/feishu_restore.js --execute --overwrite --restore-root /path/to/res
 Safety defaults:
 
 - read `data/state.json` to restore only known synced docs
+- or download `.cloud_server_sync_manifest.json` with `--manifest-file-token` / `--manifest-folder-token` before previewing restore actions
 - export Feishu/Lark docx documents as Markdown through `lark-cli drive +export`
 - require an explicit `--restore-root`
 - write under the restore root, preserving the original absolute path below that root

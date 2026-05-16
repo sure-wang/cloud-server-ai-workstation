@@ -20,6 +20,46 @@ test("parseArgs reads basic flags", () => {
   assert.equal(args.dryRun, true);
 });
 
+test("buildManifest creates cloud restore manifest from state", () => {
+  const manifest = sync.buildManifest(
+    {
+      version: 1,
+      files: {
+        "/srv/demo/a.md": { docId: "doc_xxx", title: "a" },
+      },
+    },
+    { remoteRootPath: ["cloud_server_demo"] }
+  );
+
+  assert.equal(manifest.version, 1);
+  assert.deepEqual(manifest.remoteRootPath, ["cloud_server_demo"]);
+  assert.equal(manifest.files["/srv/demo/a.md"].docId, "doc_xxx");
+  assert.match(manifest.generatedAt, /T/);
+});
+
+test("uploadManifest uploads new manifest under remote root folder", () => {
+  const calls = [];
+  const result = sync.uploadManifest("/tmp/manifest.json", "fld_xxx", null, (command, args) => {
+    calls.push({ command, args });
+    return { stdout: '{"data":{"file_token":"box_xxx"}}', stderr: "" };
+  });
+
+  assert.equal(result.file_token, "box_xxx");
+  assert.equal(calls[0].command, "lark-cli");
+  assert.deepEqual(calls[0].args, ["drive", "+upload", "--file", "/tmp/manifest.json", "--name", sync.MANIFEST_FILE_NAME, "--folder-token", "fld_xxx"]);
+});
+
+test("uploadManifest overwrites existing manifest by file token", () => {
+  const calls = [];
+  sync.uploadManifest("/tmp/manifest.json", "fld_xxx", "box_existing", (command, args) => {
+    calls.push({ command, args });
+    return { stdout: '{"data":{"file_token":"box_existing"}}', stderr: "" };
+  });
+
+  assert.equal(calls[0].args.includes("--folder-token"), false);
+  assert.deepEqual(calls[0].args.slice(-2), ["--file-token", "box_existing"]);
+});
+
 test("mergeOptions lets cli args override config", () => {
   const merged = sync.mergeOptions(
     { source: "/cli/source", dryRun: true },
@@ -45,6 +85,30 @@ test("deriveRemotePathSegments allows explicit remoteFolderPath override", () =>
   });
 
   assert.deepEqual(segments, ["fixed", "folder"]);
+});
+
+test("deriveRemoteRootSegments omits source path", () => {
+  const segments = sync.deriveRemoteRootSegments({ remoteRootPath: ["cloud_server_demo"] });
+
+  assert.deepEqual(segments, ["cloud_server_demo"]);
+});
+
+test("ensureRemoteRootFolderToken creates only remote root hierarchy", () => {
+  const originalEnsureFolder = sync.ensureFolder;
+  const calls = [];
+  sync.__setEnsureFolderForTest((parentToken, name) => {
+    calls.push({ parentToken, name });
+    return `token_${name}`;
+  });
+
+  try {
+    const token = sync.ensureRemoteRootFolderToken({ source: "/root/projects/foo", remoteRootPath: ["cloud_server_demo"] });
+
+    assert.equal(token, "token_cloud_server_demo");
+    assert.deepEqual(calls, [{ parentToken: "", name: "cloud_server_demo" }]);
+  } finally {
+    sync.__setEnsureFolderForTest(originalEnsureFolder);
+  }
 });
 
 test("validateRemoteRootPath requires explicit remote root", () => {
