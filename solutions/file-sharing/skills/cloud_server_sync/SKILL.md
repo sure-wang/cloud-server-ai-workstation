@@ -32,6 +32,19 @@ node scripts/feishu_sync.js
 7. If a demo or test run created the wrong remote root, ask before deleting or renaming existing Drive content.
 8. If this skill was just installed and is not visible to the agent, tell the human to restart the active OpenCode service or session so the skill list is reloaded.
 
+## Restore Workflow Guidance
+
+Remote-to-local restore is a planned recovery workflow, not active bidirectional sync.
+
+When the user asks about restoring cloud docs to local files:
+
+1. Explain that the current live script only syncs local -> Feishu/Lark.
+2. Treat restore as dry-run/planning unless a restore script exists and the user explicitly requests execution.
+3. Require an explicit restore root from the user.
+4. Do not restore directly into `/`, `/root`, `/etc`, `/var`, or the original source path unless the user explicitly confirms that exact target.
+5. Do not overwrite existing local files or delete local files by default.
+6. Prefer exporting known docs from `data/state.json` with `lark-cli drive +export` in a future restore implementation.
+
 ## Remote Path Rule
 
 All absolute local paths are preserved relative to `/` under the configured remote root.
@@ -45,6 +58,7 @@ Examples:
 
 - The script auto-creates missing remote folders
 - Sync is one-way: local -> Feishu/Lark
+- Remote -> local is planned as a separate restore workflow, not bidirectional sync
 - Important manual operations should send a short notification using `node scripts/lark_notify.js --text "..."`
 - Use `--dry-run` before first syncing any sensitive or system directory
 - Live sync is blocked while `remoteRootPath` still contains `CHANGE_ME_SERVER_NAME` or `example_server_sync`.
