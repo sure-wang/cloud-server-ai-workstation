@@ -66,6 +66,7 @@ Safety defaults:
 - export Feishu/Lark docx documents as Markdown through `lark-cli drive +export`
 - require an explicit `--restore-root`
 - write under the restore root, preserving the original absolute path below that root
+- keep `.md` restore targets as `.md`, and append `.md` for non-Markdown originals because Drive exports docx as Markdown
 - do not write directly back to original source paths by default
 - do not overwrite existing local files unless an explicit overwrite option is provided
 - do not delete local files

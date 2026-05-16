@@ -64,7 +64,8 @@ function collectRestoreItems(state, restoreRoot, overwrite) {
   const files = state.files || {};
   return Object.entries(files).sort(([a], [b]) => a.localeCompare(b)).map(([originalPath, entry]) => {
     const targetPath = targetPathForOriginal(originalPath, restoreRoot);
-    const exists = fs.existsSync(targetPath);
+    const exportPath = exportPathForTarget(targetPath);
+    const exists = fs.existsSync(exportPath);
     let action = "restore";
     let reason = "";
     if (!entry.docId) {
@@ -76,19 +77,25 @@ function collectRestoreItems(state, restoreRoot, overwrite) {
     } else if (exists && overwrite) {
       action = "overwrite";
     }
-    return { originalPath, targetPath, docId: entry.docId, title: entry.title, action, reason };
+    return { originalPath, targetPath, exportPath, docId: entry.docId, title: entry.title, action, reason };
   });
+}
+
+function exportPathForTarget(targetPath) {
+  return targetPath.endsWith(".md") ? targetPath : `${targetPath}.md`;
 }
 
 function ensureParentDir(filePath) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
 }
 
-function runCommand(command, commandArgs) {
-  const result = spawnSync(command, commandArgs, {
+function runCommand(command, commandArgs, cwd) {
+  const options = {
     encoding: "utf8",
     env: { ...process.env, FORCE_COLOR: "0" },
-  });
+  };
+  if (cwd) options.cwd = cwd;
+  const result = spawnSync(command, commandArgs, options);
   if (result.error) throw result.error;
   if (result.status !== 0) {
     const stderr = (result.stderr || "").trim();
@@ -98,8 +105,10 @@ function runCommand(command, commandArgs) {
   return { stdout: (result.stdout || "").trim(), stderr: (result.stderr || "").trim() };
 }
 
-function exportDoc(item, overwrite) {
-  ensureParentDir(item.targetPath);
+function exportDoc(item, overwrite, commandRunner = runCommand) {
+  const exportPath = item.exportPath || exportPathForTarget(item.targetPath);
+  ensureParentDir(exportPath);
+  const outputDir = path.dirname(exportPath);
   const args = [
     "drive",
     "+export",
@@ -110,12 +119,12 @@ function exportDoc(item, overwrite) {
     "--token",
     item.docId,
     "--output-dir",
-    path.dirname(item.targetPath),
+    ".",
     "--file-name",
-    path.basename(item.targetPath),
+    path.basename(exportPath),
   ];
   if (overwrite) args.push("--overwrite");
-  runCommand("lark-cli", args);
+  commandRunner("lark-cli", args, outputDir);
 }
 
 function buildSummary(results, restoreRoot, dryRun) {
@@ -127,8 +136,8 @@ function buildSummary(results, restoreRoot, dryRun) {
   lines.push(`Skipped: ${results.skipped.length}`);
   lines.push(`Failed: ${results.failed.length}`);
   const detailLines = [];
-  for (const item of results.restored) detailLines.push(`Restore: ${item.docId} -> ${item.targetPath}`);
-  for (const item of results.overwritten) detailLines.push(`Overwrite: ${item.docId} -> ${item.targetPath}`);
+  for (const item of results.restored) detailLines.push(`Restore: ${item.docId} -> ${item.exportPath || item.targetPath}`);
+  for (const item of results.overwritten) detailLines.push(`Overwrite: ${item.docId} -> ${item.exportPath || item.targetPath}`);
   for (const item of results.skipped) detailLines.push(`Skip: ${item.originalPath} -> ${item.reason}`);
   for (const item of results.failed) detailLines.push(`Failed: ${item.originalPath} -> ${item.error}`);
   if (detailLines.length > 30) {
@@ -189,7 +198,9 @@ module.exports = {
   resolveStatePath,
   validateRestoreRoot,
   targetPathForOriginal,
+  exportPathForTarget,
   collectRestoreItems,
+  exportDoc,
   buildSummary,
   restoreItems,
 };
