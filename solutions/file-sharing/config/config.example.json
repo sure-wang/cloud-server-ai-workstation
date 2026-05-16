@@ -1,5 +1,5 @@
 {
   "source": "/absolute/path/to/local/source",
-  "remoteRootPath": ["example_server_sync"],
+  "remoteRootPath": ["CHANGE_ME_SERVER_NAME"],
   "stateFile": "./data/state.json"
 }

@@ -50,3 +50,19 @@ If you publish screenshots, terminal logs, or chat notifications from a real env
 - folder tokens
 - user IDs / open IDs
 - other runtime identifiers returned by the platform
+
+## 7. Wrong Remote Root Created
+
+Symptoms:
+
+- A live test created folders under `example_server_sync`
+- A live test created folders under a demo root instead of the current server root
+- The new server folder is not a sibling of another expected server folder such as `cloud_server_jp`
+
+Actions:
+
+1. Stop live syncs until `config/config.json` has the intended `remoteRootPath`
+2. Run `node scripts/feishu_sync.js --dry-run` and review the remote root and remote path preview
+3. Decide whether the wrong remote folder should be renamed, moved, or deleted
+4. Ask the document owner or operator before deleting or renaming existing Drive content
+5. Remove stale entries from `data/state.json` only after deciding how to handle the remote content

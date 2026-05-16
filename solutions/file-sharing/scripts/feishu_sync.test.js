@@ -47,6 +47,41 @@ test("deriveRemotePathSegments allows explicit remoteFolderPath override", () =>
   assert.deepEqual(segments, ["fixed", "folder"]);
 });
 
+test("validateRemoteRootPath requires explicit remote root", () => {
+  assert.throws(
+    () => sync.validateRemoteRootPath({ dryRun: true }),
+    /remoteRootPath is required/
+  );
+});
+
+test("validateRemoteRootPath allows explicit folder token", () => {
+  const warnings = sync.validateRemoteRootPath({ folderToken: "fld_xxx", dryRun: false });
+
+  assert.deepEqual(warnings, []);
+});
+
+test("validateRemoteRootPath warns for placeholder during dry run", () => {
+  const warnings = sync.validateRemoteRootPath({ remoteRootPath: ["CHANGE_ME_SERVER_NAME"], dryRun: true });
+
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /placeholder value/);
+});
+
+test("validateRemoteRootPath blocks placeholder during live sync", () => {
+  assert.throws(
+    () => sync.validateRemoteRootPath({ remoteRootPath: ["CHANGE_ME_SERVER_NAME"], dryRun: false }),
+    /placeholder value/
+  );
+});
+
+test("remotePathForFile previews target document path", () => {
+  const remotePath = sync.remotePathForFile("/root/projects/foo/notes/a.md", "/root/projects/foo", {
+    remoteRootPath: ["cloud_server_demo"],
+  });
+
+  assert.equal(remotePath, "cloud_server_demo/root/projects/foo/notes/a");
+});
+
 test("parseJsonOutput tolerates log lines before JSON", () => {
   const parsed = sync.parseJsonOutput("[info] hello\n{\"ok\":true,\"data\":{\"x\":1}}\n");
   assert.equal(parsed.ok, true);
@@ -75,17 +110,21 @@ test("collectFiles splits supported and skipped files", () => {
 test("buildSummary reports counts in dry-run mode", () => {
   const summary = sync.buildSummary(
     {
-      created: [{ filePath: "/tmp/a.md", docId: "(dry-run)" }],
+      created: [{ filePath: "/tmp/a.md", docId: "(dry-run)", remotePath: "cloud_server_demo/tmp/a" }],
       updated: [],
       unchanged: [],
       failed: [],
     },
     [],
     "/tmp",
-    true
+    true,
+    { remoteRootPath: ["cloud_server_demo"], warnings: ["check remote root"] }
   );
 
   assert.match(summary, /Feishu sync dry run complete\./);
+  assert.match(summary, /Remote root: cloud_server_demo/);
   assert.match(summary, /Created: 1/);
   assert.match(summary, /Source: \/tmp/);
+  assert.match(summary, /Warning: check remote root/);
+  assert.match(summary, /cloud_server_demo\/tmp\/a/);
 });

@@ -50,6 +50,7 @@ This repository is meant to turn real working setups into reusable, public-safe 
 - Prefer simple operational recovery on a fresh cloud server.
 - Separate public-safe templates from machine-local secrets and state.
 - Preserve enough documentation so future AI/Agent sessions do not need to rediscover the setup.
+- Make each workflow friendly to both human operators and AI agents: document direct commands, preview steps, confirmation points, and any skill installation or runtime restart requirements.
 
 ## Planned Expansion
 

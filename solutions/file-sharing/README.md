@@ -46,7 +46,7 @@ One-way sync from local cloud-server text files to real Feishu/Lark Drive folder
 
 1. Install and configure `lark-cli`
 2. Copy `config/config.example.json` to `config/config.json`
-3. Edit the source path and remote root folder path
+3. Edit the source path and replace `CHANGE_ME_SERVER_NAME` with the stable folder name for this server, for example `cloud_server_aly` or `cloud_server_jp`
 4. Run a preview:
 
 ```bash
@@ -58,6 +58,30 @@ node scripts/feishu_sync.js --dry-run
 ```bash
 node scripts/feishu_sync.js
 ```
+
+## Agent-Safe Quick Start
+
+This module is intended to be usable by humans directly and by AI agents through the included skill template.
+
+Install the skill template for OpenCode:
+
+```bash
+npx -y skills add ./skills/cloud_server_sync -g --agent opencode --copy -y
+```
+
+After installing a new skill, restart the active OpenCode service or session so the runtime reloads the skill list. For a systemd deployment, use:
+
+```bash
+systemctl restart opencode.service
+```
+
+Recommended agent flow:
+
+1. Read `config/config.json`
+2. Confirm `source` and `remoteRootPath` with the human operator
+3. Run `node scripts/feishu_sync.js --dry-run`
+4. Review the remote root and remote path preview
+5. Run live sync only after explicit confirmation for a new source
 
 ## Good Fit
 
@@ -78,7 +102,7 @@ node scripts/feishu_sync.js
 - `scripts/` — sync and notification scripts
 - `config/` — public-safe config template
 - `docs/` — setup, usage, permissions, troubleshooting
-- `skills/` — reusable skill template for AI tools
+- `skills/` — reusable installable skill template for AI tools
 - `examples/` — public-safe example state
 
 ## Key Behavior
@@ -87,13 +111,14 @@ Absolute local paths are preserved relative to `/` under the configured remote r
 
 Examples:
 
-- `/workspace/example-docs` -> `example_server_sync/workspace/example-docs`
-- `/srv/demo/content` -> `example_server_sync/srv/demo/content`
-- `/srv/demo/config-snippets` -> `example_server_sync/srv/demo/config-snippets`
+- `/workspace/example-docs` -> `cloud_server_aly/workspace/example-docs`
+- `/srv/demo/content` -> `cloud_server_jp/srv/demo/content`
+- `/srv/demo/config-snippets` -> `cloud_server_jp/srv/demo/config-snippets`
 
 ## Safety Notes
 
 - Do not commit real `config.json` or `data/state.json`
+- Do not run live sync while `remoteRootPath` still contains `CHANGE_ME_SERVER_NAME` or an example value
 - Do not live-sync sensitive system directories before a `--dry-run` review
 - If you share logs, screenshots, or notifications publicly, redact local paths, doc IDs, folder tokens, and other runtime metadata
 

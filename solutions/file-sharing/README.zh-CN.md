@@ -46,7 +46,7 @@
 
 1. 安装并配置 `lark-cli`
 2. 复制 `config/config.example.json` 为 `config/config.json`
-3. 修改本地源目录和远端根目录配置
+3. 修改本地源目录，并把 `CHANGE_ME_SERVER_NAME` 替换成这台服务器稳定使用的远端根目录名，例如 `cloud_server_aly` 或 `cloud_server_jp`
 4. 先执行 dry-run：
 
 ```bash
@@ -58,6 +58,30 @@ node scripts/feishu_sync.js --dry-run
 ```bash
 node scripts/feishu_sync.js
 ```
+
+## Agent 安全快速开始
+
+这个模块既面向人类直接操作，也面向 AI Agent 通过内置 skill 模板复用。
+
+为 OpenCode 安装 skill 模板：
+
+```bash
+npx -y skills add ./skills/cloud_server_sync -g --agent opencode --copy -y
+```
+
+安装新 skill 后，需要重启当前 OpenCode 服务或会话，让运行时重新加载 skill 列表。如果使用 systemd 部署，可以执行：
+
+```bash
+systemctl restart opencode.service
+```
+
+推荐 Agent 流程：
+
+1. 读取 `config/config.json`
+2. 与人类操作者确认 `source` 和 `remoteRootPath`
+3. 执行 `node scripts/feishu_sync.js --dry-run`
+4. 检查远端根目录和远端路径预览
+5. 新源目录首次正式同步前，必须等到明确确认
 
 ## 适合的场景
 
@@ -78,7 +102,7 @@ node scripts/feishu_sync.js
 - `scripts/`：同步与通知脚本
 - `config/`：公开安全的配置模板
 - `docs/`：安装、使用、权限、排障文档
-- `skills/`：可复用的 AI 工具 skill 模板
+- `skills/`：可复用、可安装的 AI 工具 skill 模板
 - `examples/`：公开安全的状态示例
 
 ## 关键行为
@@ -87,13 +111,14 @@ node scripts/feishu_sync.js
 
 例如：
 
-- `/workspace/example-docs` -> `example_server_sync/workspace/example-docs`
-- `/srv/demo/content` -> `example_server_sync/srv/demo/content`
-- `/srv/demo/config-snippets` -> `example_server_sync/srv/demo/config-snippets`
+- `/workspace/example-docs` -> `cloud_server_aly/workspace/example-docs`
+- `/srv/demo/content` -> `cloud_server_jp/srv/demo/content`
+- `/srv/demo/config-snippets` -> `cloud_server_jp/srv/demo/config-snippets`
 
 ## 安全提醒
 
 - 不要提交真实的 `config.json` 和 `data/state.json`
+- 不要在 `remoteRootPath` 仍然是 `CHANGE_ME_SERVER_NAME` 或示例值时执行正式同步
 - 对系统敏感目录执行正式同步前，先做一次 `--dry-run` 检查
 - 如果你要公开日志、截图或通知消息，请打码本地路径、doc ID、folder token 等运行期元数据
 

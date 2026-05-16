@@ -9,6 +9,7 @@ const SOLUTION_ROOT = path.resolve(__dirname, "..");
 const DEFAULT_STATE_FILE = path.resolve(SOLUTION_ROOT, "data/state.json");
 const DEFAULT_CONFIG_FILE = path.resolve(SOLUTION_ROOT, "config/config.json");
 const SUPPORTED_EXTENSIONS = new Set([".md", ".txt"]);
+const PLACEHOLDER_REMOTE_ROOTS = new Set(["CHANGE_ME_SERVER_NAME", "example_server_sync"]);
 const WRITE_INTERVAL_MS = 450;
 const MAX_RETRIES = 4;
 
@@ -57,6 +58,19 @@ function ensureArray(value, fieldName) {
   return value;
 }
 
+function validateRemoteRootPath(options) {
+  if (options.folderToken || options.remoteFolderPath) return [];
+  const rootSegments = ensureArray(options.remoteRootPath, "remoteRootPath");
+  if (rootSegments.length === 0) {
+    throw new Error("remoteRootPath is required. Copy config/config.example.json to config/config.json and replace CHANGE_ME_SERVER_NAME with this server's folder name.");
+  }
+  const placeholders = rootSegments.filter((segment) => PLACEHOLDER_REMOTE_ROOTS.has(segment));
+  if (placeholders.length === 0) return [];
+  const warning = `remoteRootPath still contains placeholder value: ${placeholders.join("/")}. Replace it with this server's folder name before live sync.`;
+  if (!options.dryRun) throw new Error(warning);
+  return [warning];
+}
+
 function resolveStatePath(stateFile) {
   return path.isAbsolute(stateFile) ? stateFile : path.resolve(SOLUTION_ROOT, stateFile);
 }
@@ -69,6 +83,14 @@ function deriveRemotePathSegments(sourceRoot, options) {
     return [...rootSegments, ...normalizedSource.split(path.sep).filter(Boolean)];
   }
   return [...rootSegments, path.basename(normalizedSource)];
+}
+
+function remotePathForFile(filePath, sourceRoot, options) {
+  const relativeDir = path.dirname(path.relative(sourceRoot, path.resolve(filePath)));
+  const folderSegments = options.folderToken && !options.remoteRootPath ? [`folder-token:${options.folderToken}`] : deriveRemotePathSegments(sourceRoot, options);
+  if (relativeDir && relativeDir !== ".") folderSegments.push(...relativeDir.split(path.sep).filter(Boolean));
+  folderSegments.push(titleFromPath(filePath));
+  return folderSegments.join("/");
 }
 
 function ensureParentDir(filePath) {
@@ -248,18 +270,23 @@ function sendNotification(openId, text) {
   runWriteCommand("lark-cli", ["im", "+messages-send", "--as", "user", "--user-id", openId, "--text", message]);
 }
 
-function buildSummary(results, skippedUnsupported, sourcePath, dryRun) {
+function buildSummary(results, skippedUnsupported, sourcePath, dryRun, metadata = {}) {
   const lines = [];
   lines.push(dryRun ? "Feishu sync dry run complete." : "Feishu sync complete.");
   lines.push(`Source: ${sourcePath}`);
+  if (metadata.remoteRootPath) lines.push(`Remote root: ${metadata.remoteRootPath.join("/")}`);
   lines.push(`Created: ${results.created.length}`);
   lines.push(`Updated: ${results.updated.length}`);
   lines.push(`Unchanged: ${results.unchanged.length}`);
   lines.push(`Failed: ${results.failed.length}`);
   lines.push(`Skipped unsupported: ${skippedUnsupported.length}`);
+  if (metadata.warnings?.length) {
+    lines.push("");
+    for (const warning of metadata.warnings) lines.push(`Warning: ${warning}`);
+  }
   const detailLines = [];
-  for (const item of results.created) detailLines.push(`Created: ${item.filePath} -> ${item.docId}`);
-  for (const item of results.updated) detailLines.push(`Updated: ${item.filePath} -> ${item.docId}`);
+  for (const item of results.created) detailLines.push(`Created: ${item.filePath} -> ${item.remotePath || item.docId}`);
+  for (const item of results.updated) detailLines.push(`Updated: ${item.filePath} -> ${item.remotePath || item.docId}`);
   for (const item of results.failed) detailLines.push(`Failed: ${item.filePath} -> ${item.error}`);
   for (const item of skippedUnsupported.slice(0, 10)) detailLines.push(`Skipped: ${item}`);
   if (skippedUnsupported.length > 10) detailLines.push(`Skipped: ... and ${skippedUnsupported.length - 10} more unsupported files`);
@@ -287,7 +314,7 @@ function syncFile(filePath, sourceRoot, state, options, results) {
   }
   if (options.dryRun) {
     const bucket = existing ? results.updated : results.created;
-    bucket.push({ filePath: resolvedPath, docId: existing ? existing.docId : "(dry-run)" });
+    bucket.push({ filePath: resolvedPath, docId: existing ? existing.docId : "(dry-run)", remotePath: remotePathForFile(resolvedPath, sourceRoot, options) });
     return;
   }
   if (!existing || !existing.docId) {
@@ -310,6 +337,7 @@ function main() {
   const options = mergeOptions(cliOptions, fileOptions);
   if (!options.source) throw new Error("--source is required");
   options.stateFile = resolveStatePath(options.stateFile || DEFAULT_STATE_FILE);
+  const warnings = validateRemoteRootPath(options);
   const { supported, skipped } = collectFiles(options.source);
   const sourceRoot = path.resolve(options.source);
   const state = loadState(options.stateFile);
@@ -322,7 +350,10 @@ function main() {
     }
   }
   if (!options.dryRun) saveState(options.stateFile, state);
-  const summary = buildSummary(results, skipped, path.resolve(options.source), options.dryRun);
+  const summary = buildSummary(results, skipped, path.resolve(options.source), options.dryRun, {
+    remoteRootPath: options.remoteFolderPath || ensureArray(options.remoteRootPath, "remoteRootPath"),
+    warnings,
+  });
   console.log(summary);
   if (!options.dryRun) {
     const notifyTo = options.notifyTo || getDefaultNotifyTo();
@@ -349,13 +380,16 @@ if (require.main === module) {
 module.exports = {
   DEFAULT_CONFIG_FILE,
   DEFAULT_STATE_FILE,
+  PLACEHOLDER_REMOTE_ROOTS,
   SUPPORTED_EXTENSIONS,
   parseArgs,
   loadJson,
   mergeOptions,
   ensureArray,
+  validateRemoteRootPath,
   resolveStatePath,
   deriveRemotePathSegments,
+  remotePathForFile,
   collectFiles,
   titleFromPath,
   parseJsonOutput,

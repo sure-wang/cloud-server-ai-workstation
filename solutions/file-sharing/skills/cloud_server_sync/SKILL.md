@@ -13,6 +13,7 @@ Use this skill when the user wants to sync local server text files to Feishu/Lar
 - The environment already has `lark-cli` installed and configured
 - User authorization has been completed
 - `config/config.json` exists for this solution
+- The agent is running from `solutions/file-sharing` or uses that directory as the command working directory
 
 ## Default Command
 
@@ -20,14 +21,25 @@ Use this skill when the user wants to sync local server text files to Feishu/Lar
 node scripts/feishu_sync.js
 ```
 
+## Agent-Safe Workflow
+
+1. Read `config/config.json` before running sync.
+2. Confirm `source` points to the intended local directory.
+3. Confirm `remoteRootPath` has been changed from `CHANGE_ME_SERVER_NAME` to this server's stable folder name, for example `cloud_server_aly` or `cloud_server_jp`.
+4. Always run `node scripts/feishu_sync.js --dry-run` before the first live sync for a new source.
+5. Review the dry-run remote root and remote path preview with the user before live sync.
+6. Do not point `source` at broad system directories such as `/`, `/root`, `/etc`, or `/var` unless the user explicitly confirms that exact path.
+7. If a demo or test run created the wrong remote root, ask before deleting or renaming existing Drive content.
+8. If this skill was just installed and is not visible to the agent, tell the human to restart the active OpenCode service or session so the skill list is reloaded.
+
 ## Remote Path Rule
 
 All absolute local paths are preserved relative to `/` under the configured remote root.
 
 Examples:
 
-- `/workspace/example-docs` -> `example_server_sync/workspace/example-docs`
-- `/srv/demo/config-snippets` -> `example_server_sync/srv/demo/config-snippets`
+- `/workspace/example-docs` -> `cloud_server_aly/workspace/example-docs`
+- `/srv/demo/config-snippets` -> `cloud_server_jp/srv/demo/config-snippets`
 
 ## Important Notes
 
@@ -35,3 +47,4 @@ Examples:
 - Sync is one-way: local -> Feishu/Lark
 - Important manual operations should send a short notification using `node scripts/lark_notify.js --text "..."`
 - Use `--dry-run` before first syncing any sensitive or system directory
+- Live sync is blocked while `remoteRootPath` still contains `CHANGE_ME_SERVER_NAME` or `example_server_sync`.

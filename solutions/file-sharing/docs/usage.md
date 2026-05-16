@@ -14,6 +14,8 @@ This reads `config/config.json` by default.
 node scripts/feishu_sync.js --dry-run
 ```
 
+Dry-run output includes the configured remote root and a remote path preview for each file that would be created or updated.
+
 ## Override Source Path
 
 ```bash
@@ -55,17 +57,22 @@ Current minimal tests cover:
 If `remoteRootPath` is:
 
 ```json
-["example_server_sync"]
+["cloud_server_aly"]
 ```
 
 then:
 
-- `/workspace/example-docs` -> `example_server_sync/workspace/example-docs`
-- `/srv/demo/content` -> `example_server_sync/srv/demo/content`
-- `/srv/demo/config-snippets` -> `example_server_sync/srv/demo/config-snippets`
+- `/workspace/example-docs` -> `cloud_server_aly/workspace/example-docs`
+- `/srv/demo/content` -> `cloud_server_aly/srv/demo/content`
+- `/srv/demo/config-snippets` -> `cloud_server_aly/srv/demo/config-snippets`
+
+Use one stable remote root folder per server, such as `cloud_server_aly` and `cloud_server_jp`, so folders from different servers remain siblings in Drive.
+
+Do not run live sync while `remoteRootPath` still contains `CHANGE_ME_SERVER_NAME` or another example value. Demo and test syncs create real Drive folders and online docs.
 
 ## Safety Suggestions
 
 - Always run `--dry-run` before first syncing a new directory
+- Confirm `remoteRootPath` names the current server before live sync
 - Avoid pointing the live sync at sensitive system directories until you verify the file set and remote path mapping
 - Do not publish raw sync logs or notification screenshots without redacting runtime metadata
