@@ -20,6 +20,18 @@ test("parseArgs reads basic flags", () => {
   assert.equal(args.dryRun, true);
 });
 
+test("defaults use OpenCode global runtime paths", () => {
+  assert.equal(sync.DEFAULT_CONFIG_FILE, "/root/.config/opencode/cloud_server_sync/config.json");
+  assert.equal(sync.DEFAULT_STATE_FILE, "/root/.local/share/opencode/cloud_server_sync/state.json");
+  assert.equal(sync.DEFAULT_MANIFEST_FILE, "/root/.local/share/opencode/cloud_server_sync/manifest.json");
+});
+
+test("parseArgs accepts manifest file override", () => {
+  const args = sync.parseArgs(["--source", "/tmp/source", "--manifest-file", "/tmp/manifest.json"]);
+
+  assert.equal(args.manifestFile, "/tmp/manifest.json");
+});
+
 test("buildManifest creates cloud restore manifest from state", () => {
   const manifest = sync.buildManifest(
     {
@@ -39,25 +51,27 @@ test("buildManifest creates cloud restore manifest from state", () => {
 
 test("uploadManifest uploads new manifest under remote root folder", () => {
   const calls = [];
-  const result = sync.uploadManifest("/tmp/manifest.json", "fld_xxx", null, (command, args) => {
-    calls.push({ command, args });
+  const result = sync.uploadManifest("/tmp/manifest.json", "fld_xxx", null, (command, args, options) => {
+    calls.push({ command, args, options });
     return { stdout: '{"data":{"file_token":"box_xxx"}}', stderr: "" };
   });
 
   assert.equal(result.file_token, "box_xxx");
   assert.equal(calls[0].command, "lark-cli");
-  assert.deepEqual(calls[0].args, ["drive", "+upload", "--file", "/tmp/manifest.json", "--name", sync.MANIFEST_FILE_NAME, "--folder-token", "fld_xxx"]);
+  assert.deepEqual(calls[0].args, ["drive", "+upload", "--file", "./manifest.json", "--name", sync.MANIFEST_FILE_NAME, "--folder-token", "fld_xxx"]);
+  assert.equal(calls[0].options.cwd, "/tmp");
 });
 
 test("uploadManifest overwrites existing manifest by file token", () => {
   const calls = [];
-  sync.uploadManifest("/tmp/manifest.json", "fld_xxx", "box_existing", (command, args) => {
-    calls.push({ command, args });
+  sync.uploadManifest("/tmp/manifest.json", "fld_xxx", "box_existing", (command, args, options) => {
+    calls.push({ command, args, options });
     return { stdout: '{"data":{"file_token":"box_existing"}}', stderr: "" };
   });
 
   assert.equal(calls[0].args.includes("--folder-token"), false);
   assert.deepEqual(calls[0].args.slice(-2), ["--file-token", "box_existing"]);
+  assert.equal(calls[0].options.cwd, "/tmp");
 });
 
 test("mergeOptions lets cli args override config", () => {

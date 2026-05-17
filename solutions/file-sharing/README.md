@@ -14,7 +14,7 @@ One-way sync from local cloud-server text files to real Feishu/Lark Drive folder
 
 ## What It Solves
 
-- Keep selected server-side `.md` / `.txt` files available in Feishu/Lark online docs.
+- Keep selected server-side `.md` / `.txt` files from multiple source directories available in Feishu/Lark online docs.
 - Keep a cloud manifest file for recovery on a fresh machine.
 - Preserve local absolute path structure under a configurable remote root folder.
 - Send short IM notifications for important operations and sync summaries.
@@ -33,9 +33,9 @@ One-way sync from local cloud-server text files to real Feishu/Lark Drive folder
 
 Remote-to-local support is treated as a separate restore workflow, not full bidirectional sync.
 
-The restore use case is recovery or migration from previously synced Feishu/Lark online docs back to a chosen local restore directory. `scripts/feishu_restore.js` can use local `data/state.json` or download the cloud `.cloud_server_sync_manifest.json` by file token, exports known docx documents through `lark-cli drive +export`, and writes into an explicit restore root after a dry-run review.
+The restore use case is recovery or migration from previously synced Feishu/Lark online docs back to a chosen local restore directory. `scripts/feishu_restore.js` can use local `/root/.local/share/opencode/cloud_server_sync/state.json` or download the cloud `.cloud_server_sync_manifest.json` by file token, exports known docx documents through `lark-cli drive +export`, and writes into an explicit restore root after a dry-run review.
 
-Restore should not overwrite original source paths, delete local files, or resolve local/remote edit conflicts by default.
+Restore should not overwrite original source paths, delete local files, or resolve local/remote edit conflicts by default. Because restore exports Feishu/Lark online docs as Markdown, restored files may not be byte-for-byte identical to the original files; the restore script reports checksum matches and mismatches when the manifest contains checksums.
 
 ## Typical Workflow
 
@@ -56,19 +56,25 @@ Restore should not overwrite original source paths, delete local files, or resol
 ## Quick Start
 
 1. Install and configure `lark-cli`
-2. Copy `config/config.example.json` to `config/config.json`
-3. Edit the source path and replace `CHANGE_ME_SERVER_NAME` with the stable folder name for this server, for example `cloud_server_aly` or `cloud_server_jp`
-4. Run a preview:
+2. Create `/root/.config/opencode/cloud_server_sync/config.json`
+3. Replace `CHANGE_ME_SERVER_NAME` with the stable folder name for this server, for example `cloud_server_aly` or `cloud_server_jp`
+4. Run a preview for a source directory:
 
 ```bash
-node scripts/feishu_sync.js --dry-run
+node scripts/feishu_sync.js --dry-run --source /absolute/path/to/local/source
 ```
 
 5. Run the live sync:
 
 ```bash
-node scripts/feishu_sync.js
+node scripts/feishu_sync.js --source /absolute/path/to/local/source
 ```
+
+Runtime files default to OpenCode global locations:
+
+- `/root/.config/opencode/cloud_server_sync/config.json`
+- `/root/.local/share/opencode/cloud_server_sync/state.json`
+- `/root/.local/share/opencode/cloud_server_sync/manifest.json`
 
 ## Agent-Safe Quick Start
 
@@ -86,11 +92,11 @@ After installing a new skill, restart the active OpenCode service or session so 
 systemctl restart opencode.service
 ```
 
-Recommended agent flow:
+Recommended agent flow after installing the skill:
 
-1. Read `config/config.json`
-2. Confirm `source` and `remoteRootPath` with the human operator
-3. Run `node scripts/feishu_sync.js --dry-run`
+1. Read `/root/.config/opencode/cloud_server_sync/config.json`
+2. Confirm the `--source` path and `remoteRootPath` with the human operator
+3. Run `node /root/.agents/skills/cloud_server_sync/scripts/feishu_sync.js --dry-run --source <path>`
 4. Review the remote root and remote path preview
 5. Run live sync only after explicit confirmation for a new source
 
@@ -128,8 +134,8 @@ Examples:
 
 ## Safety Notes
 
-- Do not commit real `config.json` or `data/state.json`
-- Do not commit `data/.cloud_server_sync_manifest.json`; it is a runtime recovery file
+- Do not commit real runtime config or state files
+- Runtime state and manifest cache belong under `/root/.local/share/opencode/cloud_server_sync`
 - Do not run live sync while `remoteRootPath` still contains `CHANGE_ME_SERVER_NAME` or an example value
 - Do not live-sync sensitive system directories before a `--dry-run` review
 - If you share logs, screenshots, or notifications publicly, redact local paths, doc IDs, folder tokens, and other runtime metadata
@@ -138,6 +144,7 @@ Examples:
 
 - state is keyed by absolute local path, so local moves/renames are treated as new remote docs
 - remote-to-local restore is a separate recovery workflow, not active bidirectional sync
+- doc-export restore can change Markdown formatting; use `--normalize-export` only for explicit best-effort cleanup
 - remote-only cleanup is a separate manual operation, not part of normal sync
 - only text-oriented files are handled in the current public version
 

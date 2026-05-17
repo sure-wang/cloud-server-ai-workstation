@@ -32,7 +32,7 @@ If a remote doc was deleted manually, the local state can still point to the old
 
 Fix:
 
-- remove the corresponding entry from `data/state.json`
+- remove the corresponding entry from `/root/.local/share/opencode/cloud_server_sync/state.json`
 - re-run sync so the doc is recreated
 
 ## 5. Rate Limits
@@ -61,8 +61,8 @@ Symptoms:
 
 Actions:
 
-1. Stop live syncs until `config/config.json` has the intended `remoteRootPath`
-2. Run `node scripts/feishu_sync.js --dry-run` and review the remote root and remote path preview
+1. Stop live syncs until `/root/.config/opencode/cloud_server_sync/config.json` has the intended `remoteRootPath`
+2. Run `node scripts/feishu_sync.js --dry-run --source <path>` and review the remote root and remote path preview
 3. Decide whether the wrong remote folder should be renamed, moved, or deleted
 4. Ask the document owner or operator before deleting or renaming existing Drive content
-5. Remove stale entries from `data/state.json` only after deciding how to handle the remote content
+5. Remove stale entries from `/root/.local/share/opencode/cloud_server_sync/state.json` only after deciding how to handle the remote content

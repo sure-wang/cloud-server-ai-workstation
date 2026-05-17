@@ -15,6 +15,11 @@ test("parseArgs defaults to dry run", () => {
   assert.equal(args.manifestOutput, restore.DEFAULT_MANIFEST_DOWNLOAD);
 });
 
+test("defaults use OpenCode global restore paths", () => {
+  assert.equal(restore.DEFAULT_STATE_FILE, "/root/.local/share/opencode/cloud_server_sync/state.json");
+  assert.equal(restore.DEFAULT_MANIFEST_DOWNLOAD, "/root/.local/share/opencode/cloud_server_sync/manifest.json");
+});
+
 test("parseArgs accepts cloud manifest download flags", () => {
   const args = restore.parseArgs(["--restore-root", "/tmp/restore", "--manifest-file-token", "box_xxx", "--manifest-output", "/tmp/manifest.json"]);
 
@@ -29,10 +34,11 @@ test("parseArgs accepts cloud manifest folder token", () => {
 });
 
 test("parseArgs enables execution and overwrite", () => {
-  const args = restore.parseArgs(["--restore-root", "/tmp/restore", "--execute", "--overwrite"]);
+  const args = restore.parseArgs(["--restore-root", "/tmp/restore", "--execute", "--overwrite", "--normalize-export"]);
 
   assert.equal(args.dryRun, false);
   assert.equal(args.overwrite, true);
+  assert.equal(args.normalizeExport, true);
 });
 
 test("validateRestoreRoot rejects dangerous roots", () => {
@@ -52,15 +58,16 @@ test("exportPathForTarget keeps markdown targets unchanged", () => {
 
 test("downloadManifest downloads file token to output path", () => {
   const calls = [];
-  const output = restore.downloadManifest("box_xxx", "/tmp/manifest.json", (command, args) => {
-    calls.push({ command, args });
+  const output = restore.downloadManifest("box_xxx", "/tmp/manifest.json", (command, args, cwd) => {
+    calls.push({ command, args, cwd });
     return { stdout: "", stderr: "" };
   });
 
   assert.equal(output, "/tmp/manifest.json");
   assert.deepEqual(calls[0], {
     command: "lark-cli",
-    args: ["drive", "+download", "--file-token", "box_xxx", "--output", "/tmp/manifest.json", "--overwrite"],
+    args: ["drive", "+download", "--file-token", "box_xxx", "--output", "./manifest.json", "--overwrite"],
+    cwd: "/tmp",
   });
 });
 
@@ -90,8 +97,8 @@ test("findManifestInFolder finds manifest file by folder token", () => {
 
 test("downloadManifestFromFolder downloads manifest discovered in folder", () => {
   const calls = [];
-  const output = restore.downloadManifestFromFolder("https://my.feishu.cn/drive/folder/fld_xxx", "/tmp/manifest.json", (command, args) => {
-    calls.push({ command, args });
+  const output = restore.downloadManifestFromFolder("https://my.feishu.cn/drive/folder/fld_xxx", "/tmp/manifest.json", (command, args, cwd) => {
+    calls.push({ command, args, cwd });
     if (args[0] === "api") {
       return { stdout: JSON.stringify({ data: { files: [{ name: restore.MANIFEST_FILE_NAME, type: "file", token: "box_xxx" }] } }), stderr: "" };
     }
@@ -99,7 +106,8 @@ test("downloadManifestFromFolder downloads manifest discovered in folder", () =>
   });
 
   assert.equal(output, "/tmp/manifest.json");
-  assert.deepEqual(calls[1].args, ["drive", "+download", "--file-token", "box_xxx", "--output", "/tmp/manifest.json", "--overwrite"]);
+  assert.deepEqual(calls[1].args, ["drive", "+download", "--file-token", "box_xxx", "--output", "./manifest.json", "--overwrite"]);
+  assert.equal(calls[1].cwd, "/tmp");
 });
 
 test("exportPathForTarget preserves non-markdown target names", () => {
@@ -131,6 +139,25 @@ test("collectRestoreItems marks existing targets as skipped by default", () => {
   assert.equal(items[0].action, "skip");
   assert.equal(items[0].reason, "target exists");
   assert.equal(items[0].exportPath, target);
+  assert.equal(items[0].checksum, undefined);
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
+test("collectRestoreItems carries checksum from manifest", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-test-"));
+  const items = restore.collectRestoreItems(
+    {
+      version: 1,
+      files: {
+        "/srv/demo/a.md": { docId: "doc_xxx", title: "a", checksum: "abc123" },
+      },
+    },
+    tempRoot,
+    false
+  );
+
+  assert.equal(items[0].checksum, "abc123");
 
   fs.rmSync(tempRoot, { recursive: true, force: true });
 });
@@ -236,6 +263,61 @@ test("exportDoc renames lark markdown suffix back to target path", () => {
   fs.rmSync(tempRoot, { recursive: true, force: true });
 });
 
+test("normalizeExportedMarkdown removes matching Feishu title and low-risk escapes", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-normalize-test-"));
+  const targetPath = path.join(tempRoot, "checklist.txt");
+  fs.writeFileSync(targetPath, "# checklist\n\nFile\-sharing v1\.\n", "utf8");
+
+  const changed = restore.normalizeExportedMarkdown(targetPath, "checklist");
+
+  assert.equal(changed, true);
+  assert.equal(fs.readFileSync(targetPath, "utf8"), "File-sharing v1.\n");
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
+test("verifyRestoredChecksum records match and mismatch details", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-checksum-test-"));
+  const targetPath = path.join(tempRoot, "a.md");
+  fs.writeFileSync(targetPath, "hello\n", "utf8");
+  const checksum = restore.sha256(targetPath);
+
+  const matched = { exportPath: targetPath, checksum };
+  assert.equal(restore.verifyRestoredChecksum(matched), true);
+  assert.equal(matched.checksumOk, true);
+
+  const mismatched = { exportPath: targetPath, checksum: "bad" };
+  assert.equal(restore.verifyRestoredChecksum(mismatched), false);
+  assert.equal(mismatched.checksumOk, false);
+  assert.equal(mismatched.checksumExpected, "bad");
+  assert.equal(mismatched.checksumActual, checksum);
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
+test("restoreItems reports checksum mismatch after export", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-items-checksum-test-"));
+  const targetPath = path.join(tempRoot, "a.md");
+  const results = restore.restoreItems(
+    [{ originalPath: "/srv/demo/a.md", targetPath, docId: "doc_xxx", checksum: "bad", action: "restore" }],
+    {
+      dryRun: false,
+      overwrite: false,
+      normalizeExport: false,
+      commandRunner: () => {
+        fs.writeFileSync(targetPath, "exported\n", "utf8");
+        return { stdout: "", stderr: "" };
+      },
+    }
+  );
+
+  assert.equal(results.failed.length, 0);
+  assert.equal(results.restored.length, 1);
+  assert.equal(results.checksumMismatched.length, 1);
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
 test("buildSummary reports restore actions", () => {
   const summary = restore.buildSummary(
     {
@@ -243,6 +325,8 @@ test("buildSummary reports restore actions", () => {
       overwritten: [],
       skipped: [{ originalPath: "/srv/b.md", reason: "target exists" }],
       failed: [],
+      checksumMatched: [],
+      checksumMismatched: [],
     },
     "/tmp/restore",
     true
