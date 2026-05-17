@@ -27,9 +27,15 @@ test("defaults use OpenCode global runtime paths", () => {
 });
 
 test("parseArgs accepts manifest file override", () => {
-  const args = sync.parseArgs(["--source", "/tmp/source", "--manifest-file", "/tmp/manifest.json"]);
+  const args = sync.parseArgs(["--source", "/tmp/source", "--manifest-file", "/tmp/manifest.json", "--allow-dangerous-source"]);
 
   assert.equal(args.manifestFile, "/tmp/manifest.json");
+  assert.equal(args.allowDangerousSource, true);
+});
+
+test("validateSourceRoot rejects broad source roots by default", () => {
+  assert.throws(() => sync.validateSourceRoot("/root"), /dangerous source root/);
+  assert.equal(sync.validateSourceRoot("/root", true), "/root");
 });
 
 test("buildManifest creates cloud restore manifest from state", () => {
@@ -72,6 +78,22 @@ test("uploadManifest overwrites existing manifest by file token", () => {
   assert.equal(calls[0].args.includes("--folder-token"), false);
   assert.deepEqual(calls[0].args.slice(-2), ["--file-token", "box_existing"]);
   assert.equal(calls[0].options.cwd, "/tmp");
+});
+
+test("findFileInFolder rejects duplicate manifest files", () => {
+  assert.throws(
+    () => sync.findFileInFolder("fld_xxx", sync.MANIFEST_FILE_NAME, () => ({
+      stdout: JSON.stringify({
+        data: {
+          files: [
+            { type: "file", name: sync.MANIFEST_FILE_NAME, token: "box_a" },
+            { type: "file", name: sync.MANIFEST_FILE_NAME, token: "box_b" },
+          ],
+        },
+      }),
+    })),
+    /Multiple \.cloud_server_sync_manifest\.json files/
+  );
 });
 
 test("mergeOptions lets cli args override config", () => {

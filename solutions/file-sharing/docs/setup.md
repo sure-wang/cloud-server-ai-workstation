@@ -58,6 +58,8 @@ The script blocks live sync while `remoteRootPath` still contains a placeholder 
 
 Pass the source directory per run with `--source <path>` so multiple source directories can share `/root/.local/share/opencode/cloud_server_sync/state.json`.
 
+The sync script also blocks broad source roots such as `/`, `/root`, `/etc`, `/var`, `/home`, and `/tmp` by default. Use `--allow-dangerous-source` only after an explicit human review of the dry-run file set.
+
 ## Agent Skill Setup
 
 The solution can be operated manually with the Node.js scripts, or through the included AI-agent skill template.

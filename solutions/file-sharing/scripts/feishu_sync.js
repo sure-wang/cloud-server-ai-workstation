@@ -14,6 +14,7 @@ const DEFAULT_CONFIG_FILE = path.join(RUNTIME_CONFIG_DIR, "config.json");
 const DEFAULT_MANIFEST_FILE = path.join(RUNTIME_DATA_DIR, "manifest.json");
 const MANIFEST_FILE_NAME = ".cloud_server_sync_manifest.json";
 const SUPPORTED_EXTENSIONS = new Set([".md", ".txt"]);
+const DANGEROUS_SOURCE_ROOTS = new Set(["/", "/root", "/etc", "/var", "/home", "/tmp", "/usr", "/bin", "/sbin", "/lib", "/lib64", "/boot", "/dev", "/proc", "/run", "/sys"]);
 const PLACEHOLDER_REMOTE_ROOTS = new Set(["CHANGE_ME_SERVER_NAME", "example_server_sync"]);
 const WRITE_INTERVAL_MS = 450;
 const MAX_RETRIES = 4;
@@ -22,7 +23,7 @@ let lastWriteAt = 0;
 let ensureFolderOverride = null;
 
 function printUsage() {
-  console.log(`Usage: feishu_sync.js [options]\n\nOptions:\n  --source <path>        File or directory to sync\n  --folder-token <id>    Create new docs under this Feishu folder\n  --config <path>        Config file path (default: ${DEFAULT_CONFIG_FILE})\n  --notify-to <open_id>  Send summary to this open_id\n  --state-file <path>    Metadata file path (default: ${DEFAULT_STATE_FILE})\n  --manifest-file <path> Local manifest cache path (default: ${DEFAULT_MANIFEST_FILE})\n  --dry-run              Show planned changes without calling Feishu\n  -h, --help             Show this help`);
+  console.log(`Usage: feishu_sync.js [options]\n\nOptions:\n  --source <path>             File or directory to sync\n  --folder-token <id>         Create new docs under this Feishu folder\n  --config <path>             Config file path (default: ${DEFAULT_CONFIG_FILE})\n  --notify-to <open_id>       Send summary to this open_id\n  --state-file <path>         Metadata file path (default: ${DEFAULT_STATE_FILE})\n  --manifest-file <path>      Local manifest cache path (default: ${DEFAULT_MANIFEST_FILE})\n  --allow-dangerous-source    Allow broad system or home source roots\n  --dry-run                   Show planned changes without calling Feishu\n  -h, --help                  Show this help`);
 }
 
 function parseArgs(argv) {
@@ -35,6 +36,7 @@ function parseArgs(argv) {
     else if (arg === "--notify-to") args.notifyTo = argv[++i];
     else if (arg === "--state-file") args.stateFile = argv[++i];
     else if (arg === "--manifest-file") args.manifestFile = argv[++i];
+    else if (arg === "--allow-dangerous-source") args.allowDangerousSource = true;
     else if (arg === "--dry-run") args.dryRun = true;
     else if (arg === "-h" || arg === "--help") args.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
@@ -76,6 +78,16 @@ function validateRemoteRootPath(options) {
   const warning = `remoteRootPath still contains placeholder value: ${placeholders.join("/")}. Replace it with this server's folder name before live sync.`;
   if (!options.dryRun) throw new Error(warning);
   return [warning];
+}
+
+function validateSourceRoot(sourcePath, allowDangerousSource = false) {
+  if (!sourcePath) throw new Error("--source is required");
+  const resolved = path.resolve(sourcePath);
+  if (!fs.existsSync(resolved)) throw new Error(`Source path does not exist: ${resolved}`);
+  if (!allowDangerousSource && DANGEROUS_SOURCE_ROOTS.has(resolved)) {
+    throw new Error(`Refusing dangerous source root: ${resolved}. Use --allow-dangerous-source only after reviewing the exact file set with --dry-run.`);
+  }
+  return resolved;
 }
 
 function resolveStatePath(stateFile) {
@@ -248,9 +260,9 @@ function getDefaultNotifyTo() {
   return parsed.userOpenId;
 }
 
-function listFolderItems(folderToken) {
+function listFolderItems(folderToken, commandRunner = runCommand) {
   const params = JSON.stringify({ folder_token: folderToken, page_size: 200 });
-  const { stdout } = runCommand("lark-cli", ["api", "GET", "/open-apis/drive/v1/files", "--params", params]);
+  const { stdout } = commandRunner("lark-cli", ["api", "GET", "/open-apis/drive/v1/files", "--params", params]);
   const parsed = parseJsonOutput(stdout);
   return parsed.data?.files || [];
 }
@@ -295,9 +307,11 @@ function __setEnsureFolderForTest(fn) {
   ensureFolderOverride = fn;
 }
 
-function findFileInFolder(folderToken, name) {
-  const items = listFolderItems(folderToken);
-  return items.filter((item) => item.type === "file" && item.name === name).sort((a, b) => Number(a.created_time || 0) - Number(b.created_time || 0))[0] || null;
+function findFileInFolder(folderToken, name, commandRunner = runCommand) {
+  const items = listFolderItems(folderToken, commandRunner);
+  const matches = items.filter((item) => item.type === "file" && item.name === name);
+  if (matches.length > 1) throw new Error(`Multiple ${name} files found in remote folder ${folderToken}; remove duplicates before continuing.`);
+  return matches[0] || null;
 }
 
 function uploadManifest(manifestPath, folderToken, existingFileToken, commandRunner = runWriteCommand) {
@@ -406,8 +420,9 @@ function main() {
   if (!options.source) throw new Error("--source is required");
   options.stateFile = resolveStatePath(options.stateFile || DEFAULT_STATE_FILE);
   const warnings = validateRemoteRootPath(options);
-  const { supported, skipped } = collectFiles(options.source);
-  const sourceRoot = path.resolve(options.source);
+  const sourceRoot = validateSourceRoot(options.source, options.allowDangerousSource);
+  options.source = sourceRoot;
+  const { supported, skipped } = collectFiles(sourceRoot);
   const state = loadState(options.stateFile);
   const results = { created: [], updated: [], unchanged: [], failed: [] };
   for (const filePath of supported) {
@@ -455,6 +470,7 @@ module.exports = {
   DEFAULT_STATE_FILE,
   DEFAULT_MANIFEST_FILE,
   MANIFEST_FILE_NAME,
+  DANGEROUS_SOURCE_ROOTS,
   PLACEHOLDER_REMOTE_ROOTS,
   SUPPORTED_EXTENSIONS,
   parseArgs,
@@ -462,6 +478,7 @@ module.exports = {
   mergeOptions,
   ensureArray,
   validateRemoteRootPath,
+  validateSourceRoot,
   resolveStatePath,
   resolveManifestPath,
   loadState,

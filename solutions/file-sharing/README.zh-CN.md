@@ -138,6 +138,8 @@ systemctl restart opencode.service
 - 运行时 state 和 manifest 缓存应位于 `/root/.local/share/opencode/cloud_server_sync`
 - 不要在 `remoteRootPath` 仍然是 `CHANGE_ME_SERVER_NAME` 或示例值时执行正式同步
 - 对系统敏感目录执行正式同步前，先做一次 `--dry-run` 检查
+- 默认会拒绝 broad source roots；只有明确审核后才使用 `--allow-dangerous-source`
+- 同一个远端根目录下出现多个云端 manifest 会直接报错
 - 如果你要公开日志、截图或通知消息，请打码本地路径、doc ID、folder token 等运行期元数据
 
 ## 当前限制

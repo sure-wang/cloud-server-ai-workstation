@@ -56,7 +56,7 @@ Do not put a fixed `source` in the global config unless the user explicitly want
 4. Always run `node /root/.agents/skills/cloud_server_sync/scripts/feishu_sync.js --dry-run --source <path>` before the first live sync for a new source.
 5. Review the dry-run remote root and remote path preview with the user before live sync.
 6. After live sync, the script uploads `.cloud_server_sync_manifest.json` to the remote root as a normal Drive file for fresh-machine recovery.
-7. Do not point `--source` at broad system directories such as `/`, `/root`, `/etc`, or `/var` unless the user explicitly confirms that exact path.
+7. Do not point `--source` at broad system directories such as `/`, `/root`, `/etc`, or `/var` unless the user explicitly confirms that exact path and asks for `--allow-dangerous-source`.
 8. If a demo or test run created the wrong remote root, ask before deleting or renaming existing Drive content.
 
 ## Restore Workflow Guidance
@@ -76,6 +76,7 @@ When the user asks about restoring cloud docs to local files:
 9. Use `--overwrite` only when the user explicitly asks to replace existing local files.
 10. Treat restore output as Feishu/Lark document export, not byte-for-byte backup. The script reports checksum matches and mismatches after live restore.
 11. Use `--normalize-export` only when the user asks for best-effort cleanup of Feishu Markdown export quirks; it is off by default to avoid fighting future platform changes.
+12. Restore dry-runs that download a cloud manifest use a temporary local manifest path by default, so previews do not overwrite `/root/.local/share/opencode/cloud_server_sync/manifest.json` unless `--manifest-output` is explicitly provided.
 
 ## Remote Path Rule
 
@@ -89,6 +90,8 @@ Examples:
 ## Important Notes
 
 - The script auto-creates missing remote folders
+- The sync script refuses dangerous broad source roots by default; `--allow-dangerous-source` is an explicit override
+- Duplicate `.cloud_server_sync_manifest.json` files in a remote folder are treated as an error, not silently resolved
 - Sync is one-way: local -> Feishu/Lark
 - Remote -> local is a separate restore workflow, not bidirectional sync
 - Restore through doc export can differ from the original file because Feishu/Lark may insert titles, escape Markdown punctuation, or change spacing

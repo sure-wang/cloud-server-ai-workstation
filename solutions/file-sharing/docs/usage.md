@@ -97,10 +97,13 @@ node scripts/feishu_restore.js --execute --overwrite --restore-root /path/to/res
 
 Safety defaults:
 
+- refuse broad source roots such as `/`, `/root`, `/etc`, `/var`, `/home`, and `/tmp` unless `--allow-dangerous-source` is explicitly provided
 - read `/root/.local/share/opencode/cloud_server_sync/state.json` to restore only known synced docs
 - or download `.cloud_server_sync_manifest.json` with `--manifest-file-token` / `--manifest-folder-token` before previewing restore actions
+- download cloud manifests to a temporary file during dry-run previews unless `--manifest-output` is explicitly provided
 - export Feishu/Lark docx documents as Markdown through `lark-cli drive +export`
 - report checksum matches and mismatches after live export when the manifest has checksums
+- fail loudly when duplicate `.cloud_server_sync_manifest.json` files exist in a remote folder
 - require an explicit `--restore-root`
 - write under the restore root, preserving the original absolute path below that root
 - preserve the original local filename when possible; if Drive temporarily exports a non-Markdown original with an extra `.md` suffix, rename it back to the restore target

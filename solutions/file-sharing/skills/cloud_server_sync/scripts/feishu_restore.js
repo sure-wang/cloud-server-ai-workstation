@@ -11,6 +11,7 @@ const DEFAULT_STATE_FILE = path.join(RUNTIME_DATA_DIR, "state.json");
 const MANIFEST_FILE_NAME = ".cloud_server_sync_manifest.json";
 const DEFAULT_MANIFEST_DOWNLOAD = path.join(RUNTIME_DATA_DIR, "manifest.json");
 const DANGEROUS_RESTORE_ROOTS = new Set(["/", "/root", "/etc", "/var"]);
+let tempManifestCounter = 0;
 
 function printUsage() {
   console.log(`Usage: feishu_restore.js --restore-root <path> [options]\n\nOptions:\n  --restore-root <path>         Restore under this local directory\n  --state-file <path>           State file path (default: ${DEFAULT_STATE_FILE})\n  --manifest-file-token <id>    Download cloud manifest file before restore\n  --manifest-folder-token <id>  Find and download manifest from a Drive folder token or URL\n  --manifest-output <path>      Downloaded manifest path (default: ${DEFAULT_MANIFEST_DOWNLOAD})\n  --normalize-export            Best-effort cleanup of Feishu Markdown export quirks\n  --overwrite                   Overwrite existing local files\n  --execute                     Run export commands; default is dry-run\n  --dry-run                     Preview restore actions without exporting (default)\n  -h, --help                    Show this help`);
@@ -50,6 +51,11 @@ function resolveStatePath(stateFile) {
 
 function resolveManifestOutput(manifestOutput) {
   return path.isAbsolute(manifestOutput) ? manifestOutput : path.resolve(manifestOutput);
+}
+
+function defaultDryRunManifestOutput() {
+  tempManifestCounter += 1;
+  return path.join(os.tmpdir(), `cloud_server_sync_manifest_dry_run_${process.pid}_${tempManifestCounter}.json`);
 }
 
 function validateRestoreRoot(restoreRoot) {
@@ -158,7 +164,9 @@ function listFolderItems(folderToken, commandRunner = runCommand) {
 
 function findManifestInFolder(folderToken, commandRunner = runCommand) {
   const items = listFolderItems(folderToken, commandRunner);
-  return items.filter((item) => item.type === "file" && item.name === MANIFEST_FILE_NAME).sort((a, b) => Number(a.created_time || 0) - Number(b.created_time || 0))[0] || null;
+  const matches = items.filter((item) => item.type === "file" && item.name === MANIFEST_FILE_NAME);
+  if (matches.length > 1) throw new Error(`Multiple ${MANIFEST_FILE_NAME} files found in folder ${parseFolderToken(folderToken)}; remove duplicates before continuing.`);
+  return matches[0] || null;
 }
 
 function downloadManifest(fileToken, outputPath, commandRunner = runCommand) {
@@ -191,7 +199,8 @@ function normalizeExportedMarkdown(filePath, title) {
     const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     normalized = normalized.replace(new RegExp(`^# ${escapedTitle}\\r?\\n\\r?\\n`), "");
   }
-  normalized = normalized.replace(/\\([-.])/g, "$1");
+  const parts = normalized.split(/(```[\s\S]*?```)/g);
+  normalized = parts.map((part) => (part.startsWith("```") ? part : part.replace(/\\([-.])/g, "$1"))).join("");
   if (normalized === original) return false;
   fs.writeFileSync(filePath, normalized, "utf8");
   return true;
@@ -254,10 +263,12 @@ function buildSummary(results, restoreRoot, dryRun) {
   if (!dryRun) {
     lines.push(`Checksum matched: ${results.checksumMatched.length}`);
     lines.push(`Checksum mismatched: ${results.checksumMismatched.length}`);
+    lines.push(`Normalized: ${results.normalized.length}`);
   }
   const detailLines = [];
   for (const item of results.restored) detailLines.push(`Restore: ${item.docId} -> ${item.exportPath || item.targetPath}`);
   for (const item of results.overwritten) detailLines.push(`Overwrite: ${item.docId} -> ${item.exportPath || item.targetPath}`);
+  for (const item of results.normalized) detailLines.push(`Normalized: ${item.exportPath || item.targetPath}`);
   for (const item of results.checksumMismatched) detailLines.push(`Checksum mismatch: ${item.originalPath} expected ${item.checksumExpected} got ${item.checksumActual}`);
   for (const item of results.skipped) detailLines.push(`Skip: ${item.originalPath} -> ${item.reason}`);
   for (const item of results.failed) detailLines.push(`Failed: ${item.originalPath} -> ${item.error}`);
@@ -273,7 +284,7 @@ function buildSummary(results, restoreRoot, dryRun) {
 }
 
 function restoreItems(items, options) {
-  const results = { restored: [], overwritten: [], skipped: [], failed: [], checksumMatched: [], checksumMismatched: [] };
+  const results = { restored: [], overwritten: [], skipped: [], failed: [], checksumMatched: [], checksumMismatched: [], normalized: [] };
   for (const item of items) {
     if (item.action === "skip") {
       results.skipped.push(item);
@@ -282,6 +293,7 @@ function restoreItems(items, options) {
     try {
       if (!options.dryRun) {
         exportDoc(item, options.overwrite, options);
+        if (item.normalized) results.normalized.push(item);
         if (item.checksumOk === true) results.checksumMatched.push(item);
         else if (item.checksumOk === false) results.checksumMismatched.push(item);
       }
@@ -297,6 +309,9 @@ function restoreItems(items, options) {
 function main() {
   const options = parseArgs(process.argv.slice(2));
   if (options.help) return printUsage();
+  if (options.dryRun && options.manifestOutput === DEFAULT_MANIFEST_DOWNLOAD && (options.manifestFileToken || options.manifestFolderToken)) {
+    options.manifestOutput = defaultDryRunManifestOutput();
+  }
   options.manifestOutput = resolveManifestOutput(options.manifestOutput);
   if (options.manifestFileToken && options.manifestFolderToken) throw new Error("Use either --manifest-file-token or --manifest-folder-token, not both");
   if (options.manifestFolderToken) {
@@ -333,6 +348,7 @@ module.exports = {
   loadJson,
   resolveStatePath,
   resolveManifestOutput,
+  defaultDryRunManifestOutput,
   validateRestoreRoot,
   targetPathForOriginal,
   exportPathForTarget,

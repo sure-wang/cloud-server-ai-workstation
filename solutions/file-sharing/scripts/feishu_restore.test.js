@@ -27,6 +27,13 @@ test("parseArgs accepts cloud manifest download flags", () => {
   assert.equal(args.manifestOutput, "/tmp/manifest.json");
 });
 
+test("defaultDryRunManifestOutput uses temp manifest path", () => {
+  const output = restore.defaultDryRunManifestOutput();
+
+  assert.equal(path.dirname(output), os.tmpdir());
+  assert.match(path.basename(output), /^cloud_server_sync_manifest_dry_run_/);
+});
+
 test("parseArgs accepts cloud manifest folder token", () => {
   const args = restore.parseArgs(["--restore-root", "/tmp/restore", "--manifest-folder-token", "https://my.feishu.cn/drive/folder/fld_xxx"]);
 
@@ -93,6 +100,23 @@ test("findManifestInFolder finds manifest file by folder token", () => {
   });
 
   assert.equal(manifest.token, "box_xxx");
+});
+
+test("findManifestInFolder rejects duplicate manifests", () => {
+  assert.throws(
+    () => restore.findManifestInFolder("fld_xxx", () => ({
+      stdout: JSON.stringify({
+        data: {
+          files: [
+            { name: restore.MANIFEST_FILE_NAME, type: "file", token: "box_a" },
+            { name: restore.MANIFEST_FILE_NAME, type: "file", token: "box_b" },
+          ],
+        },
+      }),
+      stderr: "",
+    })),
+    /Multiple \.cloud_server_sync_manifest\.json files/
+  );
 });
 
 test("downloadManifestFromFolder downloads manifest discovered in folder", () => {
@@ -276,6 +300,18 @@ test("normalizeExportedMarkdown removes matching Feishu title and low-risk escap
   fs.rmSync(tempRoot, { recursive: true, force: true });
 });
 
+test("normalizeExportedMarkdown preserves escaped punctuation inside fenced code", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-normalize-test-"));
+  const targetPath = path.join(tempRoot, "code.md");
+  fs.writeFileSync(targetPath, "# code\n\nText\-ok\n\n```\nkeep\\-escape\\.\n```\n", "utf8");
+
+  restore.normalizeExportedMarkdown(targetPath, "code");
+
+  assert.equal(fs.readFileSync(targetPath, "utf8"), "Text-ok\n\n```\nkeep\\-escape\\.\n```\n");
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
 test("verifyRestoredChecksum records match and mismatch details", () => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-checksum-test-"));
   const targetPath = path.join(tempRoot, "a.md");
@@ -327,6 +363,7 @@ test("buildSummary reports restore actions", () => {
       failed: [],
       checksumMatched: [],
       checksumMismatched: [],
+      normalized: [],
     },
     "/tmp/restore",
     true

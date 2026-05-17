@@ -85,6 +85,8 @@ For example, a document originally synced from `/srv/demo/notes/a.md` should res
 
 Restore uses Feishu/Lark document export, so it is not a byte-for-byte backup path. The export layer may add a document title, escape Markdown punctuation, or change blank-line formatting. The restore script reports checksum matches and mismatches after live restore when manifest checksums are available, and `--normalize-export` can apply conservative best-effort cleanup when explicitly requested.
 
+Cloud manifest handling is intentionally strict. If a remote folder contains multiple `.cloud_server_sync_manifest.json` files, sync and restore fail instead of guessing which manifest is correct. Dry-run restore downloads cloud manifests to a temporary path by default so previewing an unfamiliar token does not overwrite the global manifest cache.
+
 ## Why Not Bidirectional Sync
 
 Full bidirectional sync is intentionally out of scope because it would need conflict resolution, rename tracking, deletion semantics, and format normalization between local Markdown/text files and Feishu/Lark docx exports.
@@ -105,6 +107,7 @@ The safer approach is:
 
 - One-way sync only
 - No automatic remote deletion during normal sync
+- Dangerous broad source roots are rejected unless `--allow-dangerous-source` is explicitly provided
 - Planned restore writes to an explicit restore root instead of original source paths by default
 - Serialized writes with retry/backoff
 - Manual high-risk operations should send brief notifications

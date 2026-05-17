@@ -138,6 +138,8 @@ Examples:
 - Runtime state and manifest cache belong under `/root/.local/share/opencode/cloud_server_sync`
 - Do not run live sync while `remoteRootPath` still contains `CHANGE_ME_SERVER_NAME` or an example value
 - Do not live-sync sensitive system directories before a `--dry-run` review
+- Broad source roots are blocked by default; `--allow-dangerous-source` is an explicit override only for reviewed cases
+- Duplicate cloud manifest files under one remote root are treated as an error
 - If you share logs, screenshots, or notifications publicly, redact local paths, doc IDs, folder tokens, and other runtime metadata
 
 ## Current Limitations
