@@ -3,15 +3,15 @@
 ## Default Run
 
 ```bash
-node scripts/feishu_sync.js
+node scripts/feishu_sync.js --source /absolute/path/to/local/source
 ```
 
-This reads `config/config.json` by default.
+This reads `/root/.config/opencode/cloud_server_sync/config.json` by default and writes state to `/root/.local/share/opencode/cloud_server_sync/state.json`.
 
 ## Preview Only
 
 ```bash
-node scripts/feishu_sync.js --dry-run
+node scripts/feishu_sync.js --dry-run --source /absolute/path/to/local/source
 ```
 
 Dry-run output includes the configured remote root and a remote path preview for each file that would be created or updated.
@@ -25,8 +25,17 @@ node scripts/feishu_sync.js --source /workspace/example-docs
 ## Override Config Path
 
 ```bash
-node scripts/feishu_sync.js --config ./config/config.json
+node scripts/feishu_sync.js --config ./config/config.json --source /workspace/example-docs
 ```
+
+## Runtime Files
+
+- Config: `/root/.config/opencode/cloud_server_sync/config.json`
+- State: `/root/.local/share/opencode/cloud_server_sync/state.json`
+- Local manifest cache: `/root/.local/share/opencode/cloud_server_sync/manifest.json`
+- Cloud manifest: `.cloud_server_sync_manifest.json` under the remote root folder
+
+The state file is global for this OpenCode installation and can track files from multiple source directories by absolute path.
 
 ## Notification Helper
 
@@ -42,7 +51,7 @@ Messages use a short `op` prefix by default.
 
 Remote-to-local restore is a separate recovery workflow. It should not be treated as active bidirectional sync.
 
-Live sync uploads `.cloud_server_sync_manifest.json` as a normal Drive file under the configured remote root. Keep that file available; it lets a fresh machine recover the original path-to-doc mapping without local `data/state.json`.
+Live sync uploads `.cloud_server_sync_manifest.json` as a normal Drive file under the configured remote root. Keep that file available; it lets a fresh machine recover the original path-to-doc mapping without local `/root/.local/share/opencode/cloud_server_sync/state.json`.
 
 Preview restore actions:
 
@@ -62,13 +71,23 @@ If you have the remote root folder URL or token instead of the manifest file tok
 node scripts/feishu_restore.js --dry-run --manifest-folder-token <folder_url_or_token> --restore-root /path/to/restore
 ```
 
-Both manifest options download a local runtime copy to `data/.cloud_server_sync_manifest.json` by default. This file is ignored by Git and should not be committed.
+Both manifest options download a local runtime copy to `/root/.local/share/opencode/cloud_server_sync/manifest.json` by default.
 
 Run restore after reviewing the preview:
 
 ```bash
 node scripts/feishu_restore.js --execute --restore-root /path/to/restore
 ```
+
+After live restore, the script compares restored files against the original checksums stored in the manifest when available. A mismatch usually means Feishu/Lark's Markdown export changed formatting, such as adding a document title, escaping punctuation, or adjusting blank lines.
+
+Use best-effort export cleanup only when explicitly needed:
+
+```bash
+node scripts/feishu_restore.js --execute --normalize-export --restore-root /path/to/restore
+```
+
+`--normalize-export` is intentionally off by default. It only applies conservative cleanup, such as removing a first-line `# <title>` when it matches the manifest title and unescaping low-risk punctuation. This avoids corrupting output if Feishu/Lark changes its export behavior later.
 
 Allow overwriting existing files only when explicitly requested:
 
@@ -78,9 +97,13 @@ node scripts/feishu_restore.js --execute --overwrite --restore-root /path/to/res
 
 Safety defaults:
 
-- read `data/state.json` to restore only known synced docs
+- refuse broad source roots such as `/`, `/root`, `/etc`, `/var`, `/home`, and `/tmp` unless `--allow-dangerous-source` is explicitly provided
+- read `/root/.local/share/opencode/cloud_server_sync/state.json` to restore only known synced docs
 - or download `.cloud_server_sync_manifest.json` with `--manifest-file-token` / `--manifest-folder-token` before previewing restore actions
+- download cloud manifests to a temporary file during dry-run previews unless `--manifest-output` is explicitly provided
 - export Feishu/Lark docx documents as Markdown through `lark-cli drive +export`
+- report checksum matches and mismatches after live export when the manifest has checksums
+- fail loudly when duplicate `.cloud_server_sync_manifest.json` files exist in a remote folder
 - require an explicit `--restore-root`
 - write under the restore root, preserving the original absolute path below that root
 - preserve the original local filename when possible; if Drive temporarily exports a non-Markdown original with an extra `.md` suffix, rename it back to the restore target

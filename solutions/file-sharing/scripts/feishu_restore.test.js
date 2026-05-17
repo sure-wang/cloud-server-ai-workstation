@@ -15,11 +15,23 @@ test("parseArgs defaults to dry run", () => {
   assert.equal(args.manifestOutput, restore.DEFAULT_MANIFEST_DOWNLOAD);
 });
 
+test("defaults use OpenCode global restore paths", () => {
+  assert.equal(restore.DEFAULT_STATE_FILE, "/root/.local/share/opencode/cloud_server_sync/state.json");
+  assert.equal(restore.DEFAULT_MANIFEST_DOWNLOAD, "/root/.local/share/opencode/cloud_server_sync/manifest.json");
+});
+
 test("parseArgs accepts cloud manifest download flags", () => {
   const args = restore.parseArgs(["--restore-root", "/tmp/restore", "--manifest-file-token", "box_xxx", "--manifest-output", "/tmp/manifest.json"]);
 
   assert.equal(args.manifestFileToken, "box_xxx");
   assert.equal(args.manifestOutput, "/tmp/manifest.json");
+});
+
+test("defaultDryRunManifestOutput uses temp manifest path", () => {
+  const output = restore.defaultDryRunManifestOutput();
+
+  assert.equal(path.dirname(output), os.tmpdir());
+  assert.match(path.basename(output), /^cloud_server_sync_manifest_dry_run_/);
 });
 
 test("parseArgs accepts cloud manifest folder token", () => {
@@ -29,15 +41,27 @@ test("parseArgs accepts cloud manifest folder token", () => {
 });
 
 test("parseArgs enables execution and overwrite", () => {
-  const args = restore.parseArgs(["--restore-root", "/tmp/restore", "--execute", "--overwrite"]);
+  const args = restore.parseArgs(["--restore-root", "/tmp/restore", "--execute", "--overwrite", "--normalize-export"]);
 
   assert.equal(args.dryRun, false);
   assert.equal(args.overwrite, true);
+  assert.equal(args.normalizeExport, true);
 });
 
 test("validateRestoreRoot rejects dangerous roots", () => {
   assert.throws(() => restore.validateRestoreRoot("/"), /dangerous restore root/);
   assert.throws(() => restore.validateRestoreRoot("/root"), /dangerous restore root/);
+});
+
+test("validateRestoreRoot rejects symlink restore roots to dangerous roots", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-link-test-"));
+  const linkPath = path.join(tempRoot, "root-link");
+  fs.symlinkSync("/root", linkPath);
+
+  assert.throws(() => restore.validateRestoreRoot(linkPath), /resolves through \/root/);
+  assert.throws(() => restore.validateRestoreRoot(path.join(linkPath, "nested")), /resolves through \/root/);
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
 });
 
 test("targetPathForOriginal preserves absolute path below restore root", () => {
@@ -52,15 +76,16 @@ test("exportPathForTarget keeps markdown targets unchanged", () => {
 
 test("downloadManifest downloads file token to output path", () => {
   const calls = [];
-  const output = restore.downloadManifest("box_xxx", "/tmp/manifest.json", (command, args) => {
-    calls.push({ command, args });
+  const output = restore.downloadManifest("box_xxx", "/tmp/manifest.json", (command, args, cwd) => {
+    calls.push({ command, args, cwd });
     return { stdout: "", stderr: "" };
   });
 
   assert.equal(output, "/tmp/manifest.json");
   assert.deepEqual(calls[0], {
     command: "lark-cli",
-    args: ["drive", "+download", "--file-token", "box_xxx", "--output", "/tmp/manifest.json", "--overwrite"],
+    args: ["drive", "+download", "--file-token", "box_xxx", "--output", "./manifest.json", "--overwrite"],
+    cwd: "/tmp",
   });
 });
 
@@ -88,10 +113,44 @@ test("findManifestInFolder finds manifest file by folder token", () => {
   assert.equal(manifest.token, "box_xxx");
 });
 
+test("findManifestInFolder rejects duplicate manifests", () => {
+  assert.throws(
+    () => restore.findManifestInFolder("fld_xxx", () => ({
+      stdout: JSON.stringify({
+        data: {
+          files: [
+            { name: restore.MANIFEST_FILE_NAME, type: "file", token: "box_a" },
+            { name: restore.MANIFEST_FILE_NAME, type: "file", token: "box_b" },
+          ],
+        },
+      }),
+      stderr: "",
+    })),
+    /Multiple \.cloud_server_sync_manifest\.json files/
+  );
+});
+
+test("listFolderItems follows pagination", () => {
+  const calls = [];
+  const items = restore.listFolderItems("https://my.feishu.cn/drive/folder/fld_xxx", (command, args) => {
+    calls.push({ command, args });
+    const params = JSON.parse(args[args.indexOf("--params") + 1]);
+    assert.equal(params.folder_token, "fld_xxx");
+    if (!params.page_token) {
+      return { stdout: JSON.stringify({ data: { files: [{ name: "first", type: "file" }], has_more: true, next_page_token: "page_2" } }), stderr: "" };
+    }
+    return { stdout: JSON.stringify({ data: { files: [{ name: "second", type: "file" }], has_more: false } }), stderr: "" };
+  });
+
+  assert.deepEqual(items.map((item) => item.name), ["first", "second"]);
+  assert.equal(calls.length, 2);
+  assert.equal(JSON.parse(calls[1].args[calls[1].args.indexOf("--params") + 1]).page_token, "page_2");
+});
+
 test("downloadManifestFromFolder downloads manifest discovered in folder", () => {
   const calls = [];
-  const output = restore.downloadManifestFromFolder("https://my.feishu.cn/drive/folder/fld_xxx", "/tmp/manifest.json", (command, args) => {
-    calls.push({ command, args });
+  const output = restore.downloadManifestFromFolder("https://my.feishu.cn/drive/folder/fld_xxx", "/tmp/manifest.json", (command, args, cwd) => {
+    calls.push({ command, args, cwd });
     if (args[0] === "api") {
       return { stdout: JSON.stringify({ data: { files: [{ name: restore.MANIFEST_FILE_NAME, type: "file", token: "box_xxx" }] } }), stderr: "" };
     }
@@ -99,7 +158,8 @@ test("downloadManifestFromFolder downloads manifest discovered in folder", () =>
   });
 
   assert.equal(output, "/tmp/manifest.json");
-  assert.deepEqual(calls[1].args, ["drive", "+download", "--file-token", "box_xxx", "--output", "/tmp/manifest.json", "--overwrite"]);
+  assert.deepEqual(calls[1].args, ["drive", "+download", "--file-token", "box_xxx", "--output", "./manifest.json", "--overwrite"]);
+  assert.equal(calls[1].cwd, "/tmp");
 });
 
 test("exportPathForTarget preserves non-markdown target names", () => {
@@ -131,6 +191,25 @@ test("collectRestoreItems marks existing targets as skipped by default", () => {
   assert.equal(items[0].action, "skip");
   assert.equal(items[0].reason, "target exists");
   assert.equal(items[0].exportPath, target);
+  assert.equal(items[0].checksum, undefined);
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
+test("collectRestoreItems carries checksum from manifest", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-test-"));
+  const items = restore.collectRestoreItems(
+    {
+      version: 1,
+      files: {
+        "/srv/demo/a.md": { docId: "doc_xxx", title: "a", checksum: "abc123" },
+      },
+    },
+    tempRoot,
+    false
+  );
+
+  assert.equal(items[0].checksum, "abc123");
 
   fs.rmSync(tempRoot, { recursive: true, force: true });
 });
@@ -236,6 +315,74 @@ test("exportDoc renames lark markdown suffix back to target path", () => {
   fs.rmSync(tempRoot, { recursive: true, force: true });
 });
 
+test("normalizeExportedMarkdown removes matching Feishu title and low-risk escapes", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-normalize-test-"));
+  const targetPath = path.join(tempRoot, "checklist.txt");
+  fs.writeFileSync(targetPath, "# checklist\n\nFile\\-sharing v1\\.\n", "utf8");
+
+  const changes = restore.normalizeExportedMarkdown(targetPath, "checklist");
+
+  assert.deepEqual(changes, ["removed leading exported title", "unescaped punctuation outside fenced code"]);
+  assert.equal(fs.readFileSync(targetPath, "utf8"), "File-sharing v1.\n");
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
+test("normalizeExportedMarkdown preserves escaped punctuation inside fenced code", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-normalize-test-"));
+  const targetPath = path.join(tempRoot, "code.md");
+  fs.writeFileSync(targetPath, "# code\n\nText\\-ok\n\n```\nkeep\\-escape\\.\n```\n", "utf8");
+
+  const changes = restore.normalizeExportedMarkdown(targetPath, "code");
+
+  assert.deepEqual(changes, ["removed leading exported title", "unescaped punctuation outside fenced code"]);
+  assert.equal(fs.readFileSync(targetPath, "utf8"), "Text-ok\n\n```\nkeep\\-escape\\.\n```\n");
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
+test("verifyRestoredChecksum records match and mismatch details", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-checksum-test-"));
+  const targetPath = path.join(tempRoot, "a.md");
+  fs.writeFileSync(targetPath, "hello\n", "utf8");
+  const checksum = restore.sha256(targetPath);
+
+  const matched = { exportPath: targetPath, checksum };
+  assert.equal(restore.verifyRestoredChecksum(matched), true);
+  assert.equal(matched.checksumOk, true);
+
+  const mismatched = { exportPath: targetPath, checksum: "bad" };
+  assert.equal(restore.verifyRestoredChecksum(mismatched), false);
+  assert.equal(mismatched.checksumOk, false);
+  assert.equal(mismatched.checksumExpected, "bad");
+  assert.equal(mismatched.checksumActual, checksum);
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
+test("restoreItems reports checksum mismatch after export", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-items-checksum-test-"));
+  const targetPath = path.join(tempRoot, "a.md");
+  const results = restore.restoreItems(
+    [{ originalPath: "/srv/demo/a.md", targetPath, docId: "doc_xxx", checksum: "bad", action: "restore" }],
+    {
+      dryRun: false,
+      overwrite: false,
+      normalizeExport: false,
+      commandRunner: () => {
+        fs.writeFileSync(targetPath, "exported\n", "utf8");
+        return { stdout: "", stderr: "" };
+      },
+    }
+  );
+
+  assert.equal(results.failed.length, 0);
+  assert.equal(results.restored.length, 1);
+  assert.equal(results.checksumMismatched.length, 1);
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
 test("buildSummary reports restore actions", () => {
   const summary = restore.buildSummary(
     {
@@ -243,6 +390,9 @@ test("buildSummary reports restore actions", () => {
       overwritten: [],
       skipped: [{ originalPath: "/srv/b.md", reason: "target exists" }],
       failed: [],
+      checksumMatched: [],
+      checksumMismatched: [],
+      normalized: [],
     },
     "/tmp/restore",
     true

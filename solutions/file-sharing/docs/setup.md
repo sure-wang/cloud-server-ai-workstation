@@ -33,21 +33,32 @@ Verify:
 lark-cli auth status
 ```
 
-## Create Local Config
+## Create Global OpenCode Config
 
-Copy the example file:
+Create the runtime config directory:
 
 ```bash
-cp config/config.example.json config/config.json
+mkdir -p /root/.config/opencode/cloud_server_sync
+```
+
+Create `/root/.config/opencode/cloud_server_sync/config.json`:
+
+```json
+{
+  "remoteRootPath": ["cloud_server_aly"]
+}
 ```
 
 Edit:
 
-- `source`
 - `remoteRootPath`; replace `CHANGE_ME_SERVER_NAME` with this server's stable remote folder name, for example `cloud_server_aly` or `cloud_server_jp`
 - optionally `notifyTo`
 
 The script blocks live sync while `remoteRootPath` still contains a placeholder or example value.
+
+Pass the source directory per run with `--source <path>` so multiple source directories can share `/root/.local/share/opencode/cloud_server_sync/state.json`.
+
+The sync script also blocks broad source roots such as `/`, `/root`, `/etc`, `/var`, `/home`, and `/tmp` by default. Use `--allow-dangerous-source` only after an explicit human review of the dry-run file set.
 
 ## Agent Skill Setup
 
@@ -71,14 +82,14 @@ If OpenCode is not running through systemd, restart the active OpenCode process 
 
 Recommended agent flow:
 
-1. Read `config/config.json`
-2. Confirm `source` and `remoteRootPath` with the human operator
-3. Run `node scripts/feishu_sync.js --dry-run`
+1. Read `/root/.config/opencode/cloud_server_sync/config.json`
+2. Confirm `--source` and `remoteRootPath` with the human operator
+3. Run `node /root/.agents/skills/cloud_server_sync/scripts/feishu_sync.js --dry-run --source <path>`
 4. Review the remote root and remote path preview
 5. Run live sync only after explicit confirmation for a new source
 
 ## Dry Run First
 
 ```bash
-node scripts/feishu_sync.js --dry-run
+node scripts/feishu_sync.js --dry-run --source /absolute/path/to/local/source
 ```

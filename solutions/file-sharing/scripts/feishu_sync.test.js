@@ -20,6 +20,35 @@ test("parseArgs reads basic flags", () => {
   assert.equal(args.dryRun, true);
 });
 
+test("defaults use OpenCode global runtime paths", () => {
+  assert.equal(sync.DEFAULT_CONFIG_FILE, "/root/.config/opencode/cloud_server_sync/config.json");
+  assert.equal(sync.DEFAULT_STATE_FILE, "/root/.local/share/opencode/cloud_server_sync/state.json");
+  assert.equal(sync.DEFAULT_MANIFEST_FILE, "/root/.local/share/opencode/cloud_server_sync/manifest.json");
+});
+
+test("parseArgs accepts manifest file override", () => {
+  const args = sync.parseArgs(["--source", "/tmp/source", "--manifest-file", "/tmp/manifest.json", "--allow-dangerous-source"]);
+
+  assert.equal(args.manifestFile, "/tmp/manifest.json");
+  assert.equal(args.allowDangerousSource, true);
+});
+
+test("validateSourceRoot rejects broad source roots by default", () => {
+  assert.throws(() => sync.validateSourceRoot("/root"), /dangerous source root/);
+  assert.equal(sync.validateSourceRoot("/root", true), "/root");
+});
+
+test("validateSourceRoot rejects symlinks to broad source roots", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "source-link-test-"));
+  const linkPath = path.join(tempRoot, "tmp-link");
+  fs.symlinkSync("/tmp", linkPath);
+
+  assert.throws(() => sync.validateSourceRoot(linkPath), /dangerous source root: \/tmp/);
+  assert.equal(sync.validateSourceRoot(linkPath, true), "/tmp");
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
 test("buildManifest creates cloud restore manifest from state", () => {
   const manifest = sync.buildManifest(
     {
@@ -39,25 +68,59 @@ test("buildManifest creates cloud restore manifest from state", () => {
 
 test("uploadManifest uploads new manifest under remote root folder", () => {
   const calls = [];
-  const result = sync.uploadManifest("/tmp/manifest.json", "fld_xxx", null, (command, args) => {
-    calls.push({ command, args });
+  const result = sync.uploadManifest("/tmp/manifest.json", "fld_xxx", null, (command, args, options) => {
+    calls.push({ command, args, options });
     return { stdout: '{"data":{"file_token":"box_xxx"}}', stderr: "" };
   });
 
   assert.equal(result.file_token, "box_xxx");
   assert.equal(calls[0].command, "lark-cli");
-  assert.deepEqual(calls[0].args, ["drive", "+upload", "--file", "/tmp/manifest.json", "--name", sync.MANIFEST_FILE_NAME, "--folder-token", "fld_xxx"]);
+  assert.deepEqual(calls[0].args, ["drive", "+upload", "--file", "./manifest.json", "--name", sync.MANIFEST_FILE_NAME, "--folder-token", "fld_xxx"]);
+  assert.equal(calls[0].options.cwd, "/tmp");
 });
 
 test("uploadManifest overwrites existing manifest by file token", () => {
   const calls = [];
-  sync.uploadManifest("/tmp/manifest.json", "fld_xxx", "box_existing", (command, args) => {
-    calls.push({ command, args });
+  sync.uploadManifest("/tmp/manifest.json", "fld_xxx", "box_existing", (command, args, options) => {
+    calls.push({ command, args, options });
     return { stdout: '{"data":{"file_token":"box_existing"}}', stderr: "" };
   });
 
   assert.equal(calls[0].args.includes("--folder-token"), false);
   assert.deepEqual(calls[0].args.slice(-2), ["--file-token", "box_existing"]);
+  assert.equal(calls[0].options.cwd, "/tmp");
+});
+
+test("findFileInFolder rejects duplicate manifest files", () => {
+  assert.throws(
+    () => sync.findFileInFolder("fld_xxx", sync.MANIFEST_FILE_NAME, () => ({
+      stdout: JSON.stringify({
+        data: {
+          files: [
+            { type: "file", name: sync.MANIFEST_FILE_NAME, token: "box_a" },
+            { type: "file", name: sync.MANIFEST_FILE_NAME, token: "box_b" },
+          ],
+        },
+      }),
+    })),
+    /Multiple \.cloud_server_sync_manifest\.json files/
+  );
+});
+
+test("listFolderItems follows pagination", () => {
+  const calls = [];
+  const items = sync.listFolderItems("fld_xxx", (command, args) => {
+    calls.push({ command, args });
+    const params = JSON.parse(args[args.indexOf("--params") + 1]);
+    if (!params.page_token) {
+      return { stdout: JSON.stringify({ data: { files: [{ name: "first", type: "file" }], has_more: true, next_page_token: "page_2" } }), stderr: "" };
+    }
+    return { stdout: JSON.stringify({ data: { files: [{ name: "second", type: "file" }], has_more: false } }), stderr: "" };
+  });
+
+  assert.deepEqual(items.map((item) => item.name), ["first", "second"]);
+  assert.equal(calls.length, 2);
+  assert.equal(JSON.parse(calls[1].args[calls[1].args.indexOf("--params") + 1]).page_token, "page_2");
 });
 
 test("mergeOptions lets cli args override config", () => {

@@ -23,13 +23,19 @@
    - IM notifications
 
 5. Local state
-    - `data/state.json`
-    - maps absolute local paths to remote doc IDs and folder tokens
+     - `/root/.local/share/opencode/cloud_server_sync/state.json`
+     - maps absolute local paths to remote doc IDs and folder tokens
+     - shared across multiple source directories for this OpenCode installation
 
 6. Cloud manifest
-   - `.cloud_server_sync_manifest.json`
-   - uploaded as a normal Drive file under the remote root after live sync
-   - lets a fresh machine recover the path-to-doc mapping without local state
+    - `.cloud_server_sync_manifest.json`
+    - uploaded as a normal Drive file under the remote root after live sync
+    - lets a fresh machine recover the path-to-doc mapping without local state
+
+7. Local manifest cache
+   - `/root/.local/share/opencode/cloud_server_sync/manifest.json`
+   - generated from local state during live sync
+   - used as the default download target during restore
 
 ## Data Flow
 
@@ -43,9 +49,11 @@ feishu_sync.js
    |
    +--> lark-cli docs +create / +update
    |
-    +--> data/state.json
-   |
-   +--> lark-cli drive +upload (.cloud_server_sync_manifest.json)
+    +--> /root/.local/share/opencode/cloud_server_sync/state.json
+    |
+    +--> /root/.local/share/opencode/cloud_server_sync/manifest.json
+    |
+    +--> lark-cli drive +upload (.cloud_server_sync_manifest.json)
    |
    +--> lark_notify.js / lark-cli im +messages-send
 ```
@@ -71,9 +79,13 @@ lark-cli drive +export
    +--> restore report / notification
 ```
 
-The restore flow should use `data/state.json` or the downloaded cloud manifest to identify documents originally created by this solution and to reconstruct the original absolute path under a separate restore root.
+The restore flow should use `/root/.local/share/opencode/cloud_server_sync/state.json` or the downloaded cloud manifest to identify documents originally created by this solution and to reconstruct the original absolute path under a separate restore root.
 
 For example, a document originally synced from `/srv/demo/notes/a.md` should restore to a path such as `/restore/cloud_server_aly/srv/demo/notes/a.md`, not directly back to `/srv/demo/notes/a.md` by default.
+
+Restore uses Feishu/Lark document export, so it is not a byte-for-byte backup path. The export layer may add a document title, escape Markdown punctuation, or change blank-line formatting. The restore script reports checksum matches and mismatches after live restore when manifest checksums are available, and `--normalize-export` can apply conservative best-effort cleanup when explicitly requested.
+
+Cloud manifest handling is intentionally strict. If a remote folder contains multiple `.cloud_server_sync_manifest.json` files, sync and restore fail instead of guessing which manifest is correct. Dry-run restore downloads cloud manifests to a temporary path by default so previewing an unfamiliar token does not overwrite the global manifest cache.
 
 ## Why Not Bidirectional Sync
 
@@ -95,7 +107,8 @@ The safer approach is:
 
 - One-way sync only
 - No automatic remote deletion during normal sync
+- Dangerous broad source roots are rejected unless `--allow-dangerous-source` is explicitly provided
 - Planned restore writes to an explicit restore root instead of original source paths by default
 - Serialized writes with retry/backoff
 - Manual high-risk operations should send brief notifications
-- Real local state must stay outside the public repository
+- Real local config and state stay under `/root/.config/opencode/cloud_server_sync` and `/root/.local/share/opencode/cloud_server_sync`, outside the public repository

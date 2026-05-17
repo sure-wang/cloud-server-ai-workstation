@@ -1,5 +1,3 @@
 {
-  "source": "/absolute/path/to/local/source",
-  "remoteRootPath": ["CHANGE_ME_SERVER_NAME"],
-  "stateFile": "./data/state.json"
+  "remoteRootPath": ["CHANGE_ME_SERVER_NAME"]
 }
