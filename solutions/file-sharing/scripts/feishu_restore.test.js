@@ -53,6 +53,17 @@ test("validateRestoreRoot rejects dangerous roots", () => {
   assert.throws(() => restore.validateRestoreRoot("/root"), /dangerous restore root/);
 });
 
+test("validateRestoreRoot rejects symlink restore roots to dangerous roots", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-link-test-"));
+  const linkPath = path.join(tempRoot, "root-link");
+  fs.symlinkSync("/root", linkPath);
+
+  assert.throws(() => restore.validateRestoreRoot(linkPath), /resolves through \/root/);
+  assert.throws(() => restore.validateRestoreRoot(path.join(linkPath, "nested")), /resolves through \/root/);
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
 test("targetPathForOriginal preserves absolute path below restore root", () => {
   const target = restore.targetPathForOriginal("/srv/demo/notes/a.md", "/tmp/restore");
 
@@ -117,6 +128,23 @@ test("findManifestInFolder rejects duplicate manifests", () => {
     })),
     /Multiple \.cloud_server_sync_manifest\.json files/
   );
+});
+
+test("listFolderItems follows pagination", () => {
+  const calls = [];
+  const items = restore.listFolderItems("https://my.feishu.cn/drive/folder/fld_xxx", (command, args) => {
+    calls.push({ command, args });
+    const params = JSON.parse(args[args.indexOf("--params") + 1]);
+    assert.equal(params.folder_token, "fld_xxx");
+    if (!params.page_token) {
+      return { stdout: JSON.stringify({ data: { files: [{ name: "first", type: "file" }], has_more: true, next_page_token: "page_2" } }), stderr: "" };
+    }
+    return { stdout: JSON.stringify({ data: { files: [{ name: "second", type: "file" }], has_more: false } }), stderr: "" };
+  });
+
+  assert.deepEqual(items.map((item) => item.name), ["first", "second"]);
+  assert.equal(calls.length, 2);
+  assert.equal(JSON.parse(calls[1].args[calls[1].args.indexOf("--params") + 1]).page_token, "page_2");
 });
 
 test("downloadManifestFromFolder downloads manifest discovered in folder", () => {
@@ -290,11 +318,11 @@ test("exportDoc renames lark markdown suffix back to target path", () => {
 test("normalizeExportedMarkdown removes matching Feishu title and low-risk escapes", () => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-normalize-test-"));
   const targetPath = path.join(tempRoot, "checklist.txt");
-  fs.writeFileSync(targetPath, "# checklist\n\nFile\-sharing v1\.\n", "utf8");
+  fs.writeFileSync(targetPath, "# checklist\n\nFile\\-sharing v1\\.\n", "utf8");
 
-  const changed = restore.normalizeExportedMarkdown(targetPath, "checklist");
+  const changes = restore.normalizeExportedMarkdown(targetPath, "checklist");
 
-  assert.equal(changed, true);
+  assert.deepEqual(changes, ["removed leading exported title", "unescaped punctuation outside fenced code"]);
   assert.equal(fs.readFileSync(targetPath, "utf8"), "File-sharing v1.\n");
 
   fs.rmSync(tempRoot, { recursive: true, force: true });
@@ -303,10 +331,11 @@ test("normalizeExportedMarkdown removes matching Feishu title and low-risk escap
 test("normalizeExportedMarkdown preserves escaped punctuation inside fenced code", () => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "restore-normalize-test-"));
   const targetPath = path.join(tempRoot, "code.md");
-  fs.writeFileSync(targetPath, "# code\n\nText\-ok\n\n```\nkeep\\-escape\\.\n```\n", "utf8");
+  fs.writeFileSync(targetPath, "# code\n\nText\\-ok\n\n```\nkeep\\-escape\\.\n```\n", "utf8");
 
-  restore.normalizeExportedMarkdown(targetPath, "code");
+  const changes = restore.normalizeExportedMarkdown(targetPath, "code");
 
+  assert.deepEqual(changes, ["removed leading exported title", "unescaped punctuation outside fenced code"]);
   assert.equal(fs.readFileSync(targetPath, "utf8"), "Text-ok\n\n```\nkeep\\-escape\\.\n```\n");
 
   fs.rmSync(tempRoot, { recursive: true, force: true });

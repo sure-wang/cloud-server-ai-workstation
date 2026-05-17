@@ -84,10 +84,11 @@ function validateSourceRoot(sourcePath, allowDangerousSource = false) {
   if (!sourcePath) throw new Error("--source is required");
   const resolved = path.resolve(sourcePath);
   if (!fs.existsSync(resolved)) throw new Error(`Source path does not exist: ${resolved}`);
-  if (!allowDangerousSource && DANGEROUS_SOURCE_ROOTS.has(resolved)) {
-    throw new Error(`Refusing dangerous source root: ${resolved}. Use --allow-dangerous-source only after reviewing the exact file set with --dry-run.`);
+  const realSource = fs.realpathSync(resolved);
+  if (!allowDangerousSource && DANGEROUS_SOURCE_ROOTS.has(realSource)) {
+    throw new Error(`Refusing dangerous source root: ${realSource}. Use --allow-dangerous-source only after reviewing the exact file set with --dry-run.`);
   }
-  return resolved;
+  return realSource;
 }
 
 function resolveStatePath(stateFile) {
@@ -261,10 +262,18 @@ function getDefaultNotifyTo() {
 }
 
 function listFolderItems(folderToken, commandRunner = runCommand) {
-  const params = JSON.stringify({ folder_token: folderToken, page_size: 200 });
-  const { stdout } = commandRunner("lark-cli", ["api", "GET", "/open-apis/drive/v1/files", "--params", params]);
-  const parsed = parseJsonOutput(stdout);
-  return parsed.data?.files || [];
+  const files = [];
+  let pageToken = "";
+  do {
+    const request = { folder_token: folderToken, page_size: 200 };
+    if (pageToken) request.page_token = pageToken;
+    const { stdout } = commandRunner("lark-cli", ["api", "GET", "/open-apis/drive/v1/files", "--params", JSON.stringify(request)]);
+    const parsed = parseJsonOutput(stdout);
+    files.push(...(parsed.data?.files || []));
+    if (parsed.data?.has_more && !parsed.data?.next_page_token) throw new Error(`Folder listing for ${folderToken} has more pages but no next_page_token`);
+    pageToken = parsed.data?.has_more ? parsed.data.next_page_token : "";
+  } while (pageToken);
+  return files;
 }
 
 function ensureFolder(parentToken, name) {
@@ -492,6 +501,7 @@ module.exports = {
   collectFiles,
   titleFromPath,
   parseJsonOutput,
+  listFolderItems,
   ensureFolder,
   findFileInFolder,
   uploadManifest,

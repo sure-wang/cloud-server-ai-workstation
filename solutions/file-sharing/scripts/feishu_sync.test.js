@@ -38,6 +38,17 @@ test("validateSourceRoot rejects broad source roots by default", () => {
   assert.equal(sync.validateSourceRoot("/root", true), "/root");
 });
 
+test("validateSourceRoot rejects symlinks to broad source roots", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "source-link-test-"));
+  const linkPath = path.join(tempRoot, "tmp-link");
+  fs.symlinkSync("/tmp", linkPath);
+
+  assert.throws(() => sync.validateSourceRoot(linkPath), /dangerous source root: \/tmp/);
+  assert.equal(sync.validateSourceRoot(linkPath, true), "/tmp");
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
 test("buildManifest creates cloud restore manifest from state", () => {
   const manifest = sync.buildManifest(
     {
@@ -94,6 +105,22 @@ test("findFileInFolder rejects duplicate manifest files", () => {
     })),
     /Multiple \.cloud_server_sync_manifest\.json files/
   );
+});
+
+test("listFolderItems follows pagination", () => {
+  const calls = [];
+  const items = sync.listFolderItems("fld_xxx", (command, args) => {
+    calls.push({ command, args });
+    const params = JSON.parse(args[args.indexOf("--params") + 1]);
+    if (!params.page_token) {
+      return { stdout: JSON.stringify({ data: { files: [{ name: "first", type: "file" }], has_more: true, next_page_token: "page_2" } }), stderr: "" };
+    }
+    return { stdout: JSON.stringify({ data: { files: [{ name: "second", type: "file" }], has_more: false } }), stderr: "" };
+  });
+
+  assert.deepEqual(items.map((item) => item.name), ["first", "second"]);
+  assert.equal(calls.length, 2);
+  assert.equal(JSON.parse(calls[1].args[calls[1].args.indexOf("--params") + 1]).page_token, "page_2");
 });
 
 test("mergeOptions lets cli args override config", () => {

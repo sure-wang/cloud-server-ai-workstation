@@ -53,6 +53,21 @@ function resolveManifestOutput(manifestOutput) {
   return path.isAbsolute(manifestOutput) ? manifestOutput : path.resolve(manifestOutput);
 }
 
+function pathIsDangerousRoot(filePath, dangerousRoots) {
+  const resolved = path.resolve(filePath);
+  return dangerousRoots.has(resolved);
+}
+
+function nearestExistingPath(filePath) {
+  let current = path.resolve(filePath);
+  while (!fs.existsSync(current)) {
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return current;
+}
+
 function defaultDryRunManifestOutput() {
   tempManifestCounter += 1;
   return path.join(os.tmpdir(), `cloud_server_sync_manifest_dry_run_${process.pid}_${tempManifestCounter}.json`);
@@ -61,10 +76,16 @@ function defaultDryRunManifestOutput() {
 function validateRestoreRoot(restoreRoot) {
   if (!restoreRoot) throw new Error("--restore-root is required");
   const resolved = path.resolve(restoreRoot);
-  if (DANGEROUS_RESTORE_ROOTS.has(resolved)) {
+  if (pathIsDangerousRoot(resolved, DANGEROUS_RESTORE_ROOTS)) {
     throw new Error(`Refusing dangerous restore root: ${resolved}`);
   }
-  return resolved;
+  const existingPath = nearestExistingPath(resolved);
+  const realExistingPath = fs.realpathSync(existingPath);
+  if (pathIsDangerousRoot(realExistingPath, DANGEROUS_RESTORE_ROOTS)) {
+    throw new Error(`Refusing dangerous restore root: ${resolved} resolves through ${realExistingPath}`);
+  }
+  if (existingPath === resolved) return realExistingPath;
+  return path.resolve(realExistingPath, path.relative(existingPath, resolved));
 }
 
 function targetPathForOriginal(originalPath, restoreRoot) {
@@ -156,10 +177,18 @@ function parseJsonOutput(output) {
 }
 
 function listFolderItems(folderToken, commandRunner = runCommand) {
-  const params = JSON.stringify({ folder_token: parseFolderToken(folderToken), page_size: 200 });
-  const { stdout } = commandRunner("lark-cli", ["api", "GET", "/open-apis/drive/v1/files", "--params", params]);
-  const parsed = parseJsonOutput(stdout);
-  return parsed.data?.files || [];
+  const files = [];
+  let pageToken = "";
+  do {
+    const request = { folder_token: parseFolderToken(folderToken), page_size: 200 };
+    if (pageToken) request.page_token = pageToken;
+    const { stdout } = commandRunner("lark-cli", ["api", "GET", "/open-apis/drive/v1/files", "--params", JSON.stringify(request)]);
+    const parsed = parseJsonOutput(stdout);
+    files.push(...(parsed.data?.files || []));
+    if (parsed.data?.has_more && !parsed.data?.next_page_token) throw new Error(`Folder listing for ${parseFolderToken(folderToken)} has more pages but no next_page_token`);
+    pageToken = parsed.data?.has_more ? parsed.data.next_page_token : "";
+  } while (pageToken);
+  return files;
 }
 
 function findManifestInFolder(folderToken, commandRunner = runCommand) {
@@ -192,18 +221,23 @@ function fixExportSuffix(outputDir, expectPath, fallbackPath) {
 }
 
 function normalizeExportedMarkdown(filePath, title) {
-  if (!fs.existsSync(filePath)) return false;
+  if (!fs.existsSync(filePath)) return [];
   const original = fs.readFileSync(filePath, "utf8");
   let normalized = original;
+  const changes = [];
   if (title) {
     const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    normalized = normalized.replace(new RegExp(`^# ${escapedTitle}\\r?\\n\\r?\\n`), "");
+    const withoutTitle = normalized.replace(new RegExp(`^# ${escapedTitle}\\r?\\n\\r?\\n`), "");
+    if (withoutTitle !== normalized) changes.push("removed leading exported title");
+    normalized = withoutTitle;
   }
   const parts = normalized.split(/(```[\s\S]*?```)/g);
-  normalized = parts.map((part) => (part.startsWith("```") ? part : part.replace(/\\([-.])/g, "$1"))).join("");
-  if (normalized === original) return false;
+  const unescaped = parts.map((part) => (part.startsWith("```") ? part : part.replace(/\\([-.])/g, "$1"))).join("");
+  if (unescaped !== normalized) changes.push("unescaped punctuation outside fenced code");
+  normalized = unescaped;
+  if (normalized === original) return [];
   fs.writeFileSync(filePath, normalized, "utf8");
-  return true;
+  return changes;
 }
 
 function verifyRestoredChecksum(item) {
@@ -248,7 +282,10 @@ function exportDoc(item, overwrite, optionsOrCommandRunner = {}, maybeCommandRun
       item.exportPath = exportPath;
     }
   }
-  if (options.normalizeExport && item.exportPath) item.normalized = normalizeExportedMarkdown(item.exportPath, item.title);
+  if (options.normalizeExport && item.exportPath) {
+    item.normalizedChanges = normalizeExportedMarkdown(item.exportPath, item.title);
+    item.normalized = item.normalizedChanges.length > 0;
+  }
   verifyRestoredChecksum(item);
 }
 
@@ -268,7 +305,7 @@ function buildSummary(results, restoreRoot, dryRun) {
   const detailLines = [];
   for (const item of results.restored) detailLines.push(`Restore: ${item.docId} -> ${item.exportPath || item.targetPath}`);
   for (const item of results.overwritten) detailLines.push(`Overwrite: ${item.docId} -> ${item.exportPath || item.targetPath}`);
-  for (const item of results.normalized) detailLines.push(`Normalized: ${item.exportPath || item.targetPath}`);
+  for (const item of results.normalized) detailLines.push(`Normalized: ${item.exportPath || item.targetPath} (${(item.normalizedChanges || []).join(", ")})`);
   for (const item of results.checksumMismatched) detailLines.push(`Checksum mismatch: ${item.originalPath} expected ${item.checksumExpected} got ${item.checksumActual}`);
   for (const item of results.skipped) detailLines.push(`Skip: ${item.originalPath} -> ${item.reason}`);
   for (const item of results.failed) detailLines.push(`Failed: ${item.originalPath} -> ${item.error}`);
@@ -348,6 +385,7 @@ module.exports = {
   loadJson,
   resolveStatePath,
   resolveManifestOutput,
+  nearestExistingPath,
   defaultDryRunManifestOutput,
   validateRestoreRoot,
   targetPathForOriginal,
