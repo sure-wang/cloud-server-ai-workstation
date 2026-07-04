@@ -7,6 +7,7 @@
 ## 一眼看懂
 
 - 反向代理：`Caddy`
+- HTTPS/SSL：Caddy 自动 HTTPS + Let's Encrypt 免费证书
 - 核心模式：一个应用一个子域名
 - 兼容策略：迁移期间可临时保留旧的路径入口
 - 安全加固：尽量把上游管理端口限制为仅本机可访问
@@ -23,6 +24,7 @@
 ## 当前范围
 
 - `Caddy` 反向代理示例
+- Caddy 自动申请证书，并自动完成 HTTP 到 HTTPS 跳转
 - 子域名优先的路由策略
 - 路径入口迁移与兼容保留
 - 使用一个小型 systemd 防护服务限制后台端口仅本机访问
@@ -63,9 +65,12 @@
 
 - `docs/architecture.md`：路由设计与迁移理由
 - `docs/setup.md`：DNS、Caddy、端口防护配置步骤
+- `docs/opencode-lucky-sub2api.md`：OpenCode、Lucky、sub2api 三服务的公开安全路由恢复模式
 - `docs/todo.md`：更多待接入服务的延后工作说明
 - `docs/troubleshooting.md`：常见问题与检查方法
 - `examples/Caddyfile.example`：公开安全的反向代理示例
+- `examples/Caddyfile.opencode-lucky-sub2api.example`：OpenCode、Lucky、sub2api 子域名示例
+- `examples/opencode.service.example`：OpenCode 仅本机监听的 systemd 服务示例
 - `examples/lucky-port-guard.service.example`：仅本机访问端口的示例服务
 
 ## 安全提醒
@@ -79,6 +84,7 @@
 - `../sub2api-deployment/README.md`
 - `docs/architecture.md`
 - `docs/setup.md`
+- `docs/opencode-lucky-sub2api.md`
 - `docs/todo.md`
 - `docs/troubleshooting.md`
 - `../../docs/screenshot-guidelines.md`

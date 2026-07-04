@@ -25,6 +25,15 @@ This avoids partial drift where the root domain updates automatically but newer 
 
 Use `Caddy` as the public HTTPS entrypoint.
 
+Caddy is the current free HTTPS/SSL layer for this workstation:
+
+- Caddy terminates public HTTPS on `443`.
+- Caddy automatically obtains and renews free certificates from Let's Encrypt.
+- The `Caddyfile` defines the reverse-proxy routes from public subdomains to local upstreams.
+- Caddy automatically redirects plain HTTP on `80` to HTTPS when a site has automatic HTTPS enabled.
+
+Do not configure a separate manual certificate job unless there is a specific reason to override Caddy's automatic HTTPS behavior.
+
 Keep each app behind a dedicated site block whenever possible.
 
 ## 3. Start With Subdomain Routes

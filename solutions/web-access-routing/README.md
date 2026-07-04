@@ -7,6 +7,7 @@ Public-safe reverse proxy patterns for exposing AI tools and admin panels on a c
 ## At a Glance
 
 - Reverse proxy: `Caddy`
+- HTTPS/SSL: Caddy automatic HTTPS with free Let's Encrypt certificates
 - Primary pattern: one subdomain per app
 - Compatibility fallback: keep selected legacy path entries during migration
 - Security hardening: restrict upstream admin ports to localhost when possible
@@ -23,6 +24,7 @@ Public-safe reverse proxy patterns for exposing AI tools and admin panels on a c
 ## Current Scope
 
 - `Caddy` reverse proxy examples
+- automatic HTTP-to-HTTPS redirect and certificate issuance through Caddy
 - subdomain-first routing strategy
 - migration notes for path-based legacy entries
 - localhost-only protection for upstream admin ports using a small systemd firewall guard

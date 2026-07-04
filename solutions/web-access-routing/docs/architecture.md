@@ -12,6 +12,17 @@ Example public-safe mapping:
 
 This pattern keeps each app close to the way it already expects to run: from `/`, not from a prefixed subpath.
 
+## HTTPS And SSL Model
+
+The current server HTTPS/SSL model is:
+
+- `Caddy` is the public HTTPS entrypoint.
+- Caddy automatic HTTPS obtains and renews free Let's Encrypt certificates.
+- The `Caddyfile` holds the reverse-proxy rules for each public subdomain.
+- Caddy automatically redirects HTTP traffic to HTTPS for managed sites.
+
+In this model, upstream services should stay private on `127.0.0.1:<port>` whenever possible. Public clients should reach services through `https://<subdomain>` rather than direct upstream ports.
+
 ## Why Subdomains Usually Win
 
 ### 1. Frontend compatibility

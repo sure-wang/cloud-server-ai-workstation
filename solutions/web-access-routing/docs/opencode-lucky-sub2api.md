@@ -8,6 +8,8 @@ This note records a public-safe recovery pattern for exposing three local servic
 
 The goal is to make `Caddy` the only public HTTP entrypoint while keeping service-specific ports local.
 
+This pattern uses Caddy automatic HTTPS as the free SSL layer: Caddy obtains and renews Let's Encrypt certificates, serves the public HTTPS routes from the `Caddyfile`, and redirects HTTP traffic to HTTPS.
+
 ## Human-Assisted Steps
 
 Some parts of this setup should be done by a human operator, not blindly automated.
