@@ -17,4 +17,4 @@ The current public modules intentionally stay focused on:
 
 Deferred follow-up within the web access module:
 
-- connect `solutions/sub2api-deployment` to a stable public HTTPS entry after hosting is stable again
+- connect [solutions/sub2api-deployment](../solutions/sub2api-deployment/) to a stable public HTTPS entry after hosting is stable again

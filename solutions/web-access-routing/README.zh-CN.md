@@ -63,15 +63,15 @@
 
 ## 目录结构
 
-- `docs/architecture.md`：路由设计与迁移理由
-- `docs/setup.md`：DNS、Caddy、端口防护配置步骤
-- `docs/opencode-lucky-sub2api.md`：OpenCode、Lucky、sub2api 三服务的公开安全路由恢复模式
-- `docs/todo.md`：更多待接入服务的延后工作说明
-- `docs/troubleshooting.md`：常见问题与检查方法
-- `examples/Caddyfile.example`：公开安全的反向代理示例
-- `examples/Caddyfile.opencode-lucky-sub2api.example`：OpenCode、Lucky、sub2api 子域名示例
-- `examples/opencode.service.example`：OpenCode 仅本机监听的 systemd 服务示例
-- `examples/lucky-port-guard.service.example`：仅本机访问端口的示例服务
+- [docs/architecture.md](./docs/architecture.md)：路由设计与迁移理由
+- [docs/setup.md](./docs/setup.md)：DNS、Caddy、端口防护配置步骤
+- [docs/opencode-lucky-sub2api.md](./docs/opencode-lucky-sub2api.md)：OpenCode、Lucky、sub2api 三服务的公开安全路由恢复模式
+- [docs/todo.md](./docs/todo.md)：更多待接入服务的延后工作说明
+- [docs/troubleshooting.md](./docs/troubleshooting.md)：常见问题与检查方法
+- [examples/Caddyfile.example](./examples/Caddyfile.example)：公开安全的反向代理示例
+- [examples/Caddyfile.opencode-lucky-sub2api.example](./examples/Caddyfile.opencode-lucky-sub2api.example)：OpenCode、Lucky、sub2api 子域名示例
+- [examples/opencode.service.example](./examples/opencode.service.example)：OpenCode 仅本机监听的 systemd 服务示例
+- [examples/lucky-port-guard.service.example](./examples/lucky-port-guard.service.example)：仅本机访问端口的示例服务
 
 ## 安全提醒
 
@@ -81,15 +81,15 @@
 
 ## 推荐继续阅读
 
-- `../sub2api-deployment/README.md`
-- `docs/architecture.md`
-- `docs/setup.md`
-- `docs/opencode-lucky-sub2api.md`
-- `docs/todo.md`
-- `docs/troubleshooting.md`
-- `../../docs/screenshot-guidelines.md`
+- [../sub2api-deployment/README.md](../sub2api-deployment/README.md)
+- [docs/architecture.md](./docs/architecture.md)
+- [docs/setup.md](./docs/setup.md)
+- [docs/opencode-lucky-sub2api.md](./docs/opencode-lucky-sub2api.md)
+- [docs/todo.md](./docs/todo.md)
+- [docs/troubleshooting.md](./docs/troubleshooting.md)
+- [../../docs/screenshot-guidelines.md](../../docs/screenshot-guidelines.md)
 
 ## 语言说明
 
-- 英文模块入口：`README.md`
-- 中文模块入口：`README.zh-CN.md`
+- 英文模块入口：[README.md](./README.md)
+- 中文模块入口：[README.zh-CN.md](./README.zh-CN.md)

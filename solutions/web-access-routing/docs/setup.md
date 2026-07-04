@@ -93,7 +93,7 @@ Example flow:
 2. make it `WantedBy=multi-user.target`
 3. insert IPv4 and IPv6 reject rules for the admin port except from localhost
 
-See `../examples/lucky-port-guard.service.example`.
+See [../examples/lucky-port-guard.service.example](../examples/lucky-port-guard.service.example).
 
 If the panel also supports DDNS or certificate management, keeping the panel reachable only through the reverse proxy still works well. The public HTTPS entry stays on `443`, while the real admin port remains a local implementation detail.
 
@@ -121,8 +121,8 @@ Target outcome:
 
 For a concrete OpenCode + Lucky + sub2api shape, see:
 
-- `opencode-lucky-sub2api.md`
-- `../examples/Caddyfile.opencode-lucky-sub2api.example`
-- `../examples/opencode.service.example`
+- [opencode-lucky-sub2api.md](./opencode-lucky-sub2api.md)
+- [../examples/Caddyfile.opencode-lucky-sub2api.example](../examples/Caddyfile.opencode-lucky-sub2api.example)
+- [../examples/opencode.service.example](../examples/opencode.service.example)
 
 This pattern also documents the human-assisted steps that should not be treated as fully automated, such as Lucky panel setup, DDNS credential entry, safe-entry configuration, and backup-before-reset workflows.

@@ -60,11 +60,11 @@ Public-safe deployment notes for restoring `sub2api` on a fresh cloud server.
 
 ## Directory Layout
 
-- `docs/architecture.md` - deployment boundaries and recovery model
-- `docs/setup.md` - step-by-step bootstrap and deployment flow
-- `docs/troubleshooting.md` - common breakage patterns and checks
-- `docs/localhost-behind-caddy.md` - bind the app port to localhost after HTTPS routing is ready
-- `examples/env.override.example` - public-safe values you may want to override after generation
+- [docs/architecture.md](./docs/architecture.md) - deployment boundaries and recovery model
+- [docs/setup.md](./docs/setup.md) - step-by-step bootstrap and deployment flow
+- [docs/troubleshooting.md](./docs/troubleshooting.md) - common breakage patterns and checks
+- [docs/localhost-behind-caddy.md](./docs/localhost-behind-caddy.md) - bind the app port to localhost after HTTPS routing is ready
+- [examples/env.override.example](./examples/env.override.example) - public-safe values you may want to override after generation
 
 ## Safety Notes
 
@@ -74,14 +74,14 @@ Public-safe deployment notes for restoring `sub2api` on a fresh cloud server.
 
 ## Read Next
 
-- `docs/architecture.md`
-- `docs/setup.md`
-- `docs/troubleshooting.md`
-- `docs/localhost-behind-caddy.md`
-- `../web-access-routing/README.md`
-- `../../docs/screenshot-guidelines.md`
+- [docs/architecture.md](./docs/architecture.md)
+- [docs/setup.md](./docs/setup.md)
+- [docs/troubleshooting.md](./docs/troubleshooting.md)
+- [docs/localhost-behind-caddy.md](./docs/localhost-behind-caddy.md)
+- [../web-access-routing/README.md](../web-access-routing/README.md)
+- [../../docs/screenshot-guidelines.md](../../docs/screenshot-guidelines.md)
 
 ## Language Notes
 
-- English module entry: `README.md`
-- Chinese module entry: `README.zh-CN.md`
+- English module entry: [README.md](./README.md)
+- Chinese module entry: [README.zh-CN.md](./README.zh-CN.md)

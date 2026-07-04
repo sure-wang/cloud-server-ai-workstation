@@ -15,7 +15,7 @@ Use this skill when the user wants to sync local server text files to Feishu/Lar
 - Runtime config exists at `/root/.config/opencode/cloud_server_sync/config.json`
 - Runtime state is stored at `/root/.local/share/opencode/cloud_server_sync/state.json`
 - Local manifest cache is stored at `/root/.local/share/opencode/cloud_server_sync/manifest.json`
-- Scripts are included in this skill under `scripts/` and can run from any working directory
+- Scripts are included in this skill under [scripts/](./scripts/) and can run from any working directory
 
 ## Default Commands
 

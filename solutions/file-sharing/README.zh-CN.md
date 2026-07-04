@@ -33,7 +33,7 @@
 
 云端到本地的能力应该作为独立的恢复流程处理，而不是完整双向同步。
 
-预期用途是从已经同步到飞书 / Lark 的在线文档恢复或迁移到指定的本地恢复目录。`scripts/feishu_restore.js` 可以使用本地 `/root/.local/share/opencode/cloud_server_sync/state.json`，也可以按 file token 下载云端 `.cloud_server_sync_manifest.json`，再通过 `lark-cli drive +export` 导出已知 docx 文档，并在 dry-run 检查后写入明确指定的 restore root。
+预期用途是从已经同步到飞书 / Lark 的在线文档恢复或迁移到指定的本地恢复目录。[scripts/feishu_restore.js](./scripts/feishu_restore.js) 可以使用本地 `/root/.local/share/opencode/cloud_server_sync/state.json`，也可以按 file token 下载云端 `.cloud_server_sync_manifest.json`，再通过 `lark-cli drive +export` 导出已知 docx 文档，并在 dry-run 检查后写入明确指定的 restore root。
 
 恢复流程默认不应该覆盖原始 source 路径、不删除本地文件，也不自动解决本地编辑与云端文档编辑之间的冲突。由于恢复是把飞书 / Lark 在线文档导出为 Markdown，恢复文件不一定和原始文件字节级一致；manifest 包含 checksum 时，恢复脚本会报告校验匹配和不匹配数量。
 
@@ -116,11 +116,11 @@ systemctl restart opencode.service
 
 ## 目录结构
 
-- `scripts/`：同步与通知脚本
-- `config/`：公开安全的配置模板
-- `docs/`：安装、使用、权限、排障文档
-- `skills/`：可复用、可安装的 AI 工具 skill 模板
-- `examples/`：公开安全的状态示例
+- [scripts/](./scripts/)：同步与通知脚本
+- [config/](./config/)：公开安全的配置模板
+- [docs/](./docs/)：安装、使用、权限、排障文档
+- [skills/](./skills/)：可复用、可安装的 AI 工具 skill 模板
+- [examples/](./examples/)：公开安全的状态示例
 
 ## 关键行为
 
@@ -152,14 +152,14 @@ systemctl restart opencode.service
 
 ## 推荐继续阅读
 
-- `docs/setup.md`
-- `docs/architecture.md`
-- `docs/usage.md`
-- `docs/permissions.md`
-- `docs/troubleshooting.md`
-- `../../docs/screenshot-guidelines.md`
+- [docs/setup.md](./docs/setup.md)
+- [docs/architecture.md](./docs/architecture.md)
+- [docs/usage.md](./docs/usage.md)
+- [docs/permissions.md](./docs/permissions.md)
+- [docs/troubleshooting.md](./docs/troubleshooting.md)
+- [../../docs/screenshot-guidelines.md](../../docs/screenshot-guidelines.md)
 
 ## 语言说明
 
-- 英文模块入口：`README.md`
-- 中文模块入口：`README.zh-CN.md`
+- 英文模块入口：[README.md](./README.md)
+- 中文模块入口：[README.zh-CN.md](./README.zh-CN.md)

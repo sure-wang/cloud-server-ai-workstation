@@ -23,8 +23,8 @@
 
 这个仓库目前是有意识地从小做起：
 
-- 已发布的第一个模块：`solutions/file-sharing`
-- 新增的服务部署模块：`solutions/sub2api-deployment`
+- 已发布的第一个模块：[solutions/file-sharing](./solutions/file-sharing/)
+- 新增的服务部署模块：[solutions/sub2api-deployment](./solutions/sub2api-deployment/)
 - 当前重点：实用、可恢复、可公开分享的方案样例
 - 后续方向：逐步扩展成一组云服务器 AI / Agent 环境模式案例
 

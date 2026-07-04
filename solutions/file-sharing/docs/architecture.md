@@ -6,7 +6,7 @@
    - contains `.md` / `.txt` files to sync
 
 2. Sync script
-   - `scripts/feishu_sync.js`
+   - [scripts/feishu_sync.js](../scripts/feishu_sync.js)
    - scans local files
    - computes content hashes
    - ensures remote folder hierarchy exists
@@ -14,7 +14,7 @@
    - writes local state
 
 3. Notification helper
-   - `scripts/lark_notify.js`
+   - [scripts/lark_notify.js](../scripts/lark_notify.js)
    - sends short IM notifications as the authenticated user
 
 4. `lark-cli`

@@ -33,7 +33,7 @@ One-way sync from local cloud-server text files to real Feishu/Lark Drive folder
 
 Remote-to-local support is treated as a separate restore workflow, not full bidirectional sync.
 
-The restore use case is recovery or migration from previously synced Feishu/Lark online docs back to a chosen local restore directory. `scripts/feishu_restore.js` can use local `/root/.local/share/opencode/cloud_server_sync/state.json` or download the cloud `.cloud_server_sync_manifest.json` by file token, exports known docx documents through `lark-cli drive +export`, and writes into an explicit restore root after a dry-run review.
+The restore use case is recovery or migration from previously synced Feishu/Lark online docs back to a chosen local restore directory. [scripts/feishu_restore.js](./scripts/feishu_restore.js) can use local `/root/.local/share/opencode/cloud_server_sync/state.json` or download the cloud `.cloud_server_sync_manifest.json` by file token, exports known docx documents through `lark-cli drive +export`, and writes into an explicit restore root after a dry-run review.
 
 Restore should not overwrite original source paths, delete local files, or resolve local/remote edit conflicts by default. Because restore exports Feishu/Lark online docs as Markdown, restored files may not be byte-for-byte identical to the original files; the restore script reports checksum matches and mismatches when the manifest contains checksums.
 
@@ -116,11 +116,11 @@ Recommended agent flow after installing the skill:
 
 ## Directory Layout
 
-- `scripts/` — sync and notification scripts
-- `config/` — public-safe config template
-- `docs/` — setup, usage, permissions, troubleshooting
-- `skills/` — reusable installable skill template for AI tools
-- `examples/` — public-safe example state
+- [scripts/](./scripts/) - sync and notification scripts
+- [config/](./config/) - public-safe config template
+- [docs/](./docs/) - setup, usage, permissions, troubleshooting
+- [skills/](./skills/) - reusable installable skill template for AI tools
+- [examples/](./examples/) - public-safe example state
 
 ## Key Behavior
 
@@ -152,14 +152,14 @@ Examples:
 
 ## Read Next
 
-- `docs/setup.md`
-- `docs/architecture.md`
-- `docs/usage.md`
-- `docs/permissions.md`
-- `docs/troubleshooting.md`
-- `../../docs/screenshot-guidelines.md`
+- [docs/setup.md](./docs/setup.md)
+- [docs/architecture.md](./docs/architecture.md)
+- [docs/usage.md](./docs/usage.md)
+- [docs/permissions.md](./docs/permissions.md)
+- [docs/troubleshooting.md](./docs/troubleshooting.md)
+- [../../docs/screenshot-guidelines.md](../../docs/screenshot-guidelines.md)
 
 ## Language Notes
 
-- English module entry: `README.md`
-- Chinese module entry: `README.zh-CN.md`
+- English module entry: [README.md](./README.md)
+- Chinese module entry: [README.zh-CN.md](./README.zh-CN.md)
