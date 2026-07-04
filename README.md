@@ -8,10 +8,10 @@ This repository is organized as a set of independent, reusable solution modules.
 
 ## Start Here
 
-- Repository overview: `docs/overview.md`
-- Current roadmap: `docs/roadmap.md`
-- Screenshot publishing guidance: `docs/screenshot-guidelines.md`
-- First complete solution: `solutions/file-sharing/`
+- Repository overview: [docs/overview.md](./docs/overview.md)
+- Current roadmap: [docs/roadmap.md](./docs/roadmap.md)
+- Screenshot publishing guidance: [docs/screenshot-guidelines.md](./docs/screenshot-guidelines.md)
+- First complete solution: [solutions/file-sharing/](./solutions/file-sharing/)
 
 ## Platform Scope
 
@@ -32,9 +32,9 @@ This repository is intentionally starting small.
 
 ## Solutions
 
-- `solutions/file-sharing` - sync local cloud-server text files to real Feishu/Lark Drive folders and online docs, with message notifications.
-- `solutions/sub2api-deployment` - deploy `sub2api` on a fresh cloud server with Docker Compose, low-memory guardrails, and recovery-oriented notes.
-- `solutions/web-access-routing` - publish local AI tools and admin panels through subdomain-first Caddy reverse proxy patterns.
+- [solutions/file-sharing](./solutions/file-sharing/) - sync local cloud-server text files to real Feishu/Lark Drive folders and online docs, with message notifications.
+- [solutions/sub2api-deployment](./solutions/sub2api-deployment/) - deploy `sub2api` on a fresh cloud server with Docker Compose, low-memory guardrails, and recovery-oriented notes.
+- [solutions/web-access-routing](./solutions/web-access-routing/) - publish local AI tools and admin panels through subdomain-first Caddy reverse proxy patterns.
 
 ## Why This Repository Exists
 
@@ -78,21 +78,21 @@ This repository is released under the [MIT License](./LICENSE).
 
 ## Repository Map
 
-```text
-docs/                         repository-level overview and guidelines
-solutions/file-sharing/       sync server text files to Feishu/Lark docs
-solutions/sub2api-deployment/ deploy sub2api on a fresh cloud server
-solutions/web-access-routing/ subdomain-first reverse proxy patterns for local web apps
-```
+| Path | Purpose | Start Here |
+| --- | --- | --- |
+| [docs/](./docs/) | Repository-level overview and guidelines | [overview](./docs/overview.md), [roadmap](./docs/roadmap.md), [screenshot guidance](./docs/screenshot-guidelines.md) |
+| [solutions/file-sharing/](./solutions/file-sharing/) | Sync server text files to Feishu/Lark docs | [English](./solutions/file-sharing/README.md), [中文](./solutions/file-sharing/README.zh-CN.md) |
+| [solutions/sub2api-deployment/](./solutions/sub2api-deployment/) | Deploy sub2api on a fresh cloud server | [English](./solutions/sub2api-deployment/README.md), [中文](./solutions/sub2api-deployment/README.zh-CN.md) |
+| [solutions/web-access-routing/](./solutions/web-access-routing/) | Subdomain-first reverse proxy patterns for local web apps | [English](./solutions/web-access-routing/README.md), [中文](./solutions/web-access-routing/README.zh-CN.md) |
 
 ## Language Notes
 
-- English repository entry: `README.md`
-- Chinese repository entry: `README.zh-CN.md`
-- English file-sharing module entry: `solutions/file-sharing/README.md`
-- Chinese file-sharing module entry: `solutions/file-sharing/README.zh-CN.md`
-- English sub2api deployment module entry: `solutions/sub2api-deployment/README.md`
-- Chinese sub2api deployment module entry: `solutions/sub2api-deployment/README.zh-CN.md`
-- English web-access-routing module entry: `solutions/web-access-routing/README.md`
-- Chinese web-access-routing module entry: `solutions/web-access-routing/README.zh-CN.md`
-- Screenshot publishing guidance: `docs/screenshot-guidelines.md`
+- English repository entry: [README.md](./README.md)
+- Chinese repository entry: [README.zh-CN.md](./README.zh-CN.md)
+- English file-sharing module entry: [solutions/file-sharing/README.md](./solutions/file-sharing/README.md)
+- Chinese file-sharing module entry: [solutions/file-sharing/README.zh-CN.md](./solutions/file-sharing/README.zh-CN.md)
+- English sub2api deployment module entry: [solutions/sub2api-deployment/README.md](./solutions/sub2api-deployment/README.md)
+- Chinese sub2api deployment module entry: [solutions/sub2api-deployment/README.zh-CN.md](./solutions/sub2api-deployment/README.zh-CN.md)
+- English web-access-routing module entry: [solutions/web-access-routing/README.md](./solutions/web-access-routing/README.md)
+- Chinese web-access-routing module entry: [solutions/web-access-routing/README.zh-CN.md](./solutions/web-access-routing/README.zh-CN.md)
+- Screenshot publishing guidance: [docs/screenshot-guidelines.md](./docs/screenshot-guidelines.md)

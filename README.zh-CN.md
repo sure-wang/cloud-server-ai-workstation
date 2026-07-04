@@ -6,10 +6,10 @@
 
 ## 从这里开始
 
-- 仓库概览：`docs/overview.md`
-- 当前路线图：`docs/roadmap.md`
-- 截图发布规范：`docs/screenshot-guidelines.md`
-- 第一个完整方案：`solutions/file-sharing/`
+- 仓库概览：[docs/overview.md](./docs/overview.md)
+- 当前路线图：[docs/roadmap.md](./docs/roadmap.md)
+- 截图发布规范：[docs/screenshot-guidelines.md](./docs/screenshot-guidelines.md)
+- 第一个完整方案：[solutions/file-sharing/](./solutions/file-sharing/)
 
 ## 平台范围
 
@@ -30,9 +30,9 @@
 
 ## 方案模块
 
-- `solutions/file-sharing`：将云服务器上的本地文本文件同步到飞书 / Lark 云盘与在线文档，并支持简短消息通知。
-- `solutions/sub2api-deployment`：在一台新的云服务器上用 Docker Compose 部署 `sub2api`，并包含低内存机器的保护性配置与恢复说明。
-- `solutions/web-access-routing`：通过以子域名优先的 Caddy 反向代理模式，对外发布本地 AI 工具和管理面板。
+- [solutions/file-sharing](./solutions/file-sharing/)：将云服务器上的本地文本文件同步到飞书 / Lark 云盘与在线文档，并支持简短消息通知。
+- [solutions/sub2api-deployment](./solutions/sub2api-deployment/)：在一台新的云服务器上用 Docker Compose 部署 `sub2api`，并包含低内存机器的保护性配置与恢复说明。
+- [solutions/web-access-routing](./solutions/web-access-routing/)：通过以子域名优先的 Caddy 反向代理模式，对外发布本地 AI 工具和管理面板。
 
 ## 为什么要做这个仓库
 
@@ -76,21 +76,21 @@
 
 ## 仓库结构概览
 
-```text
-docs/                         仓库级说明和公开发布规范
-solutions/file-sharing/       服务器文本同步到飞书 / Lark 文档
-solutions/sub2api-deployment/ 在新云服务器上恢复 sub2api 服务
-solutions/web-access-routing/ 本地 Web 应用的子域名优先反向代理模式
-```
+| 路径 | 用途 | 推荐入口 |
+| --- | --- | --- |
+| [docs/](./docs/) | 仓库级说明和公开发布规范 | [仓库概览](./docs/overview.md)、[路线图](./docs/roadmap.md)、[截图规范](./docs/screenshot-guidelines.md) |
+| [solutions/file-sharing/](./solutions/file-sharing/) | 服务器文本同步到飞书 / Lark 文档 | [English](./solutions/file-sharing/README.md)、[中文](./solutions/file-sharing/README.zh-CN.md) |
+| [solutions/sub2api-deployment/](./solutions/sub2api-deployment/) | 在新云服务器上恢复 sub2api 服务 | [English](./solutions/sub2api-deployment/README.md)、[中文](./solutions/sub2api-deployment/README.zh-CN.md) |
+| [solutions/web-access-routing/](./solutions/web-access-routing/) | 本地 Web 应用的子域名优先反向代理模式 | [English](./solutions/web-access-routing/README.md)、[中文](./solutions/web-access-routing/README.zh-CN.md) |
 
 ## 语言说明
 
-- 英文仓库入口：`README.md`
-- 中文仓库入口：`README.zh-CN.md`
-- 英文 file-sharing 入口：`solutions/file-sharing/README.md`
-- 中文 file-sharing 入口：`solutions/file-sharing/README.zh-CN.md`
-- 英文 sub2api deployment 入口：`solutions/sub2api-deployment/README.md`
-- 中文 sub2api deployment 入口：`solutions/sub2api-deployment/README.zh-CN.md`
-- 英文 web-access-routing 入口：`solutions/web-access-routing/README.md`
-- 中文 web-access-routing 入口：`solutions/web-access-routing/README.zh-CN.md`
-- 截图发布规范：`docs/screenshot-guidelines.md`
+- 英文仓库入口：[README.md](./README.md)
+- 中文仓库入口：[README.zh-CN.md](./README.zh-CN.md)
+- 英文 file-sharing 入口：[solutions/file-sharing/README.md](./solutions/file-sharing/README.md)
+- 中文 file-sharing 入口：[solutions/file-sharing/README.zh-CN.md](./solutions/file-sharing/README.zh-CN.md)
+- 英文 sub2api deployment 入口：[solutions/sub2api-deployment/README.md](./solutions/sub2api-deployment/README.md)
+- 中文 sub2api deployment 入口：[solutions/sub2api-deployment/README.zh-CN.md](./solutions/sub2api-deployment/README.zh-CN.md)
+- 英文 web-access-routing 入口：[solutions/web-access-routing/README.md](./solutions/web-access-routing/README.md)
+- 中文 web-access-routing 入口：[solutions/web-access-routing/README.zh-CN.md](./solutions/web-access-routing/README.zh-CN.md)
+- 截图发布规范：[docs/screenshot-guidelines.md](./docs/screenshot-guidelines.md)
