@@ -60,10 +60,10 @@
 
 ## 目录结构
 
-- `docs/architecture.md`：部署边界与恢复模型
-- `docs/setup.md`：逐步 bootstrap 与部署流程
-- `docs/troubleshooting.md`：常见问题与检查方法
-- `examples/env.override.example`：生成后可按需覆盖的公开安全示例值
+- [docs/architecture.md](./docs/architecture.md)：部署边界与恢复模型
+- [docs/setup.md](./docs/setup.md)：逐步 bootstrap 与部署流程
+- [docs/troubleshooting.md](./docs/troubleshooting.md)：常见问题与检查方法
+- [examples/env.override.example](./examples/env.override.example)：生成后可按需覆盖的公开安全示例值
 
 ## 安全提醒
 
@@ -73,13 +73,13 @@
 
 ## 推荐继续阅读
 
-- `docs/architecture.md`
-- `docs/setup.md`
-- `docs/troubleshooting.md`
-- `../web-access-routing/README.md`
-- `../../docs/screenshot-guidelines.md`
+- [docs/architecture.md](./docs/architecture.md)
+- [docs/setup.md](./docs/setup.md)
+- [docs/troubleshooting.md](./docs/troubleshooting.md)
+- [../web-access-routing/README.md](../web-access-routing/README.md)
+- [../../docs/screenshot-guidelines.md](../../docs/screenshot-guidelines.md)
 
 ## 语言说明
 
-- 英文模块入口：`README.md`
-- 中文模块入口：`README.zh-CN.md`
+- 英文模块入口：[README.md](./README.md)
+- 中文模块入口：[README.zh-CN.md](./README.zh-CN.md)

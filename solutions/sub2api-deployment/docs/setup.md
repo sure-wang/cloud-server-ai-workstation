@@ -83,7 +83,7 @@ Also review at least these values in `.env`:
 - `SERVER_PORT`
 - `TZ`
 
-See `../examples/env.override.example` for public-safe placeholders.
+See [../examples/env.override.example](../examples/env.override.example) for public-safe placeholders.
 
 ## 7. Start The Stack
 

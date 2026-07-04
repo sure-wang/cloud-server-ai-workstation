@@ -28,6 +28,6 @@ For AI agents, document the safe workflow boundaries:
 
 If a module includes scripts that can create, update, delete, or publish remote resources, provide a dry-run or preview workflow and make it prominent in the README.
 
-Operational screenshots should follow `docs/screenshot-guidelines.md` before public sharing.
+Operational screenshots should follow [screenshot-guidelines.md](./screenshot-guidelines.md) before public sharing.
 
-Published modules currently include `solutions/file-sharing`, `solutions/sub2api-deployment`, and `solutions/web-access-routing`.
+Published modules currently include [solutions/file-sharing](../solutions/file-sharing/), [solutions/sub2api-deployment](../solutions/sub2api-deployment/), and [solutions/web-access-routing](../solutions/web-access-routing/).

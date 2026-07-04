@@ -63,15 +63,15 @@ Public-safe reverse proxy patterns for exposing AI tools and admin panels on a c
 
 ## Directory Layout
 
-- `docs/architecture.md` - routing design and migration rationale
-- `docs/setup.md` - DNS, Caddy, and port-guard setup steps
-- `docs/opencode-lucky-sub2api.md` - public-safe three-service routing recovery pattern
-- `docs/todo.md` - deferred follow-up work for additional routed services
-- `docs/troubleshooting.md` - common breakage patterns and checks
-- `examples/Caddyfile.example` - public-safe reverse proxy example
-- `examples/Caddyfile.opencode-lucky-sub2api.example` - OpenCode, Lucky, and sub2api subdomain example
-- `examples/opencode.service.example` - local-only OpenCode systemd service example
-- `examples/lucky-port-guard.service.example` - localhost-only port restriction example
+- [docs/architecture.md](./docs/architecture.md) - routing design and migration rationale
+- [docs/setup.md](./docs/setup.md) - DNS, Caddy, and port-guard setup steps
+- [docs/opencode-lucky-sub2api.md](./docs/opencode-lucky-sub2api.md) - public-safe three-service routing recovery pattern
+- [docs/todo.md](./docs/todo.md) - deferred follow-up work for additional routed services
+- [docs/troubleshooting.md](./docs/troubleshooting.md) - common breakage patterns and checks
+- [examples/Caddyfile.example](./examples/Caddyfile.example) - public-safe reverse proxy example
+- [examples/Caddyfile.opencode-lucky-sub2api.example](./examples/Caddyfile.opencode-lucky-sub2api.example) - OpenCode, Lucky, and sub2api subdomain example
+- [examples/opencode.service.example](./examples/opencode.service.example) - local-only OpenCode systemd service example
+- [examples/lucky-port-guard.service.example](./examples/lucky-port-guard.service.example) - localhost-only port restriction example
 
 ## Safety Notes
 
@@ -81,15 +81,15 @@ Public-safe reverse proxy patterns for exposing AI tools and admin panels on a c
 
 ## Read Next
 
-- `../sub2api-deployment/README.md`
-- `docs/architecture.md`
-- `docs/setup.md`
-- `docs/opencode-lucky-sub2api.md`
-- `docs/todo.md`
-- `docs/troubleshooting.md`
-- `../../docs/screenshot-guidelines.md`
+- [../sub2api-deployment/README.md](../sub2api-deployment/README.md)
+- [docs/architecture.md](./docs/architecture.md)
+- [docs/setup.md](./docs/setup.md)
+- [docs/opencode-lucky-sub2api.md](./docs/opencode-lucky-sub2api.md)
+- [docs/todo.md](./docs/todo.md)
+- [docs/troubleshooting.md](./docs/troubleshooting.md)
+- [../../docs/screenshot-guidelines.md](../../docs/screenshot-guidelines.md)
 
 ## Language Notes
 
-- English module entry: `README.md`
-- Chinese module entry: `README.zh-CN.md`
+- English module entry: [README.md](./README.md)
+- Chinese module entry: [README.zh-CN.md](./README.zh-CN.md)

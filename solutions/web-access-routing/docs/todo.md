@@ -4,9 +4,9 @@
 
 The basic `sub2api` subdomain pattern is now captured in:
 
-- `opencode-lucky-sub2api.md`
-- `../examples/Caddyfile.opencode-lucky-sub2api.example`
-- `../../sub2api-deployment/docs/localhost-behind-caddy.md`
+- [opencode-lucky-sub2api.md](./opencode-lucky-sub2api.md)
+- [../examples/Caddyfile.opencode-lucky-sub2api.example](../examples/Caddyfile.opencode-lucky-sub2api.example)
+- [../../sub2api-deployment/docs/localhost-behind-caddy.md](../../sub2api-deployment/docs/localhost-behind-caddy.md)
 
 Future work should refine this only after another real setup exposes new edge cases.
 
@@ -20,7 +20,7 @@ One practical next step is to extend the same subdomain-first pattern to small h
 - `sub2api.example.com`
 - other local single-purpose HTTP services
 
-For `sub2api`, the deployment-side recovery notes now live in `../../sub2api-deployment/README.md`.
+For `sub2api`, the deployment-side recovery notes now live in [../../sub2api-deployment/README.md](../../sub2api-deployment/README.md).
 This module should stay focused on the public HTTPS entry, not on the Docker deployment itself.
 
 ## Why This Work Was Deferred

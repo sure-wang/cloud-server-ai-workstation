@@ -74,7 +74,7 @@ This resets Lucky base settings. Module data should be preserved, but the operat
 
 Run OpenCode as a local-only systemd service.
 
-See `../examples/opencode.service.example`.
+See [../examples/opencode.service.example](../examples/opencode.service.example).
 
 Minimum validation:
 
@@ -149,7 +149,7 @@ not:
 
 Use one subdomain per app.
 
-See `../examples/Caddyfile.opencode-lucky-sub2api.example`.
+See [../examples/Caddyfile.opencode-lucky-sub2api.example](../examples/Caddyfile.opencode-lucky-sub2api.example).
 
 After writing `/etc/caddy/Caddyfile`:
 

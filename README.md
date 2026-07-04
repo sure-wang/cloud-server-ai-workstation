@@ -25,8 +25,8 @@ Future modules may cover macOS or Windows workflows, but those platforms should 
 
 This repository is intentionally starting small.
 
-- First published module: `solutions/file-sharing`
-- Newly added service deployment module: `solutions/sub2api-deployment`
+- First published module: [solutions/file-sharing](./solutions/file-sharing/)
+- Newly added service deployment module: [solutions/sub2api-deployment](./solutions/sub2api-deployment/)
 - Current focus: practical, reproducible, public-safe solution examples
 - Future direction: expand into a broader set of cloud-server AI/Agent environment patterns
 
